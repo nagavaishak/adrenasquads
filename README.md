@@ -17,8 +17,14 @@ Team-based trading competition infrastructure for [Adrena Protocol](https://adre
 | **Explorer** | [View on Solana Explorer](https://explorer.solana.com/address/8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc?cluster=devnet) |
 | **IDL account** | `79WfCnBiv31Ah2GThe8W8HPctXi3xoFKpLFL8zUfAskk` |
 | **Upgrade authority** | `BkZPVAfARRCdLd6i7a1bf2RTShJBBqidSfqZtj1V32mJ` |
-| **Deployed at slot** | `450568201` |
+| **Last deployed slot** | `450570347` |
+| **Config PDA** | `HhK2RgjGSbi7fZjLUVnJH5zviufx9ju4DYvjNBdf57S2` |
+| **Competition #1 PDA** | `3gkfqYu85nXW6rddCG5tsEJ963mQyeV866sYv2zCmH6e` |
+| **Prize authority PDA** | `8Hj7cf4SHSkvpRfKEW5KnqqYkKwwUNz96sDPcsxibCEq` |
+| **Bond vault** | `FHvaSDmqojG8c6QzKihhGDV26uQPJrEQHTLWBhkVPYje` |
 | **Test USDC mint** | `WxKsUrqXn2BfD69Vnpu8xpBo83VwLbhZbPLbDqh4Szo` (6 decimals) |
+| **Competition status** | `Registration` — squads can call `register_squad_entry` |
+| **Round** | Season 1 · Round 1 · ends 2026-03-30 |
 
 ### Verify the deployment
 
