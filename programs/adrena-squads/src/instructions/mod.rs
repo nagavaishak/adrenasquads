@@ -1,0 +1,36 @@
+pub mod initialize_config;
+pub mod init_user_profile;
+pub mod create_squad;
+pub mod join_squad;
+pub mod leave_squad;
+pub mod kick_member;
+pub mod create_competition;
+pub mod start_competition;
+pub mod register_squad_entry;
+pub mod finalize_round;
+pub mod end_competition;
+pub mod claim_prize;
+pub mod create_prediction_pool;
+pub mod place_prediction;
+pub mod lock_predictions;
+pub mod resolve_prediction;
+pub mod claim_prediction;
+
+// Re-export only Accounts structs (not handler functions) to avoid name collisions
+pub use initialize_config::InitializeConfig;
+pub use init_user_profile::InitUserProfile;
+pub use create_squad::CreateSquad;
+pub use join_squad::JoinSquad;
+pub use leave_squad::LeaveSquad;
+pub use kick_member::KickMember;
+pub use create_competition::CreateCompetition;
+pub use start_competition::StartCompetition;
+pub use register_squad_entry::RegisterSquadEntry;
+pub use finalize_round::FinalizeRound;
+pub use end_competition::EndCompetition;
+pub use claim_prize::ClaimPrize;
+pub use create_prediction_pool::CreatePredictionPool;
+pub use place_prediction::PlacePrediction;
+pub use lock_predictions::LockPredictions;
+pub use resolve_prediction::ResolvePrediction;
+pub use claim_prediction::ClaimPrediction;
