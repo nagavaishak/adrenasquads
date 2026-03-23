@@ -1,4 +1,9 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+// In production (Vercel) the API routes live on the same origin at /api.
+// In local dev, fall back to localhost:3001 if a separate backend is running.
+const BASE =
+  typeof window !== "undefined"
+    ? ""  // same-origin in browser
+    : process.env.NEXT_PUBLIC_API_URL ?? "";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { next: { revalidate: 10 } });

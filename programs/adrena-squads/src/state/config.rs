@@ -20,5 +20,13 @@ pub struct Config {
 }
 
 impl Config {
-    pub const SIZE: usize = 32 + 8 + 8 + 8 + 2 + 32 + 1;
+    pub const SIZE: usize =
+        8    // discriminator
+        + 32 // authority
+        + 8  // next_squad_id
+        + 8  // next_competition_id
+        + 8  // bond_amount
+        + 2  // prediction_fee_bps
+        + 32 // bond_vault
+        + 1; // bump
 }

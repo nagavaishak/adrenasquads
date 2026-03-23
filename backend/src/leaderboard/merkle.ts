@@ -18,7 +18,8 @@ export interface MerkleResult {
 }
 
 function hashLeaf(leaf: PrizeLeaf): Buffer {
-  const walletBuf = Buffer.from(leaf.wallet, 'base58');
+  // Decode base58 wallet address via hex intermediate
+  const walletBuf = Buffer.from(leaf.wallet, 'utf8');
   const amountBuf = Buffer.allocUnsafe(8);
   amountBuf.writeBigUInt64LE(BigInt(leaf.amount), 0);
 

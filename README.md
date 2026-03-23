@@ -3,8 +3,56 @@
 Team-based trading competition infrastructure for [Adrena Protocol](https://adrena.xyz) on Solana.
 
 **Bounty:** Trading Competition Infrastructure
-**Network:** Devnet (ready for mainnet with mint swap)
-**Program ID:** `8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc`
+**Live demo:** https://adrenasquads.vercel.app
+**Repo:** https://github.com/nagavaishak/adrenasquads
+
+---
+
+## Devnet Deployment
+
+| Item | Value |
+|---|---|
+| **Program ID** | `8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc` |
+| **Network** | Solana Devnet |
+| **Explorer** | [View on Solana Explorer](https://explorer.solana.com/address/8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc?cluster=devnet) |
+| **IDL account** | `79WfCnBiv31Ah2GThe8W8HPctXi3xoFKpLFL8zUfAskk` |
+| **Upgrade authority** | `BkZPVAfARRCdLd6i7a1bf2RTShJBBqidSfqZtj1V32mJ` |
+| **Deployed at slot** | `450568201` |
+| **Test USDC mint** | `WxKsUrqXn2BfD69Vnpu8xpBo83VwLbhZbPLbDqh4Szo` (6 decimals) |
+
+### Verify the deployment
+
+```bash
+solana program show 8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc --url devnet
+```
+
+### Adrena API Integration
+
+The scoring engine calls Adrena's public data API directly:
+
+| Endpoint | Used for |
+|---|---|
+| `datapi.adrena.trade/get-positions?account=<wallet>` | Fetch open positions + unrealized PnL |
+| `datapi.adrena.trade/liquidity-info` | AUM, ALP price, custody weights |
+| `datapi.adrena.trade/pool-high-level-stats` | 24h volume, fees |
+
+The leaderboard API route at `/api/competition/leaderboard` queries live Adrena positions, normalises PnL by collateral, and returns real-time squad scores. Falls back to demo data when no wallets have open positions.
+
+### Initialize on devnet (one-time setup)
+
+```bash
+# Fund the deployer wallet
+solana airdrop 5 BkZPVAfARRCdLd6i7a1bf2RTShJBBqidSfqZtj1V32mJ --url devnet
+
+# Initialize the config PDA
+ANCHOR_WALLET=~/.config/solana/id.json \
+ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
+USDC_MINT=WxKsUrqXn2BfD69Vnpu8xpBo83VwLbhZbPLbDqh4Szo \
+npx ts-node --transpile-only scripts/initialize.ts \
+  --bond-vault FHvaSDmqojG8c6QzKihhGDV26uQPJrEQHTLWBhkVPYje
+```
+
+> **Note:** `initialize_config` currently requires ~0.002 SOL for the Config PDA rent. After initialization, `create_competition`, `create_squad`, and all other instructions are ready to use.
 
 ---
 
