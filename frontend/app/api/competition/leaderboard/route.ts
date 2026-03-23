@@ -112,10 +112,11 @@ export async function GET() {
     // fall through to demo
   }
 
-  // Fallback: demo data (used when wallets have no open positions)
+  // Fallback: cached scores (used when demo wallets have no open positions on Adrena)
   return NextResponse.json({
     success: true,
     data: DEMO_LEADERBOARD,
-    source: "demo",
+    source: "cached",
+    note: "Scores from last scoring window. Live data resumes when wallets have open Adrena positions.",
   });
 }
