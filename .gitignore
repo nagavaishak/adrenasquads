@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+.next/
+frontend/.next/
+target/
+/target
+
+# Rust
+**/*.rs.bk
+
+# Environment
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+
+# Vercel
+.vercel
+frontend/.vercel
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+
+# Keys / secrets
+keys/
+*.keypair
