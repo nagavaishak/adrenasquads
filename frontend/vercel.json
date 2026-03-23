@@ -1,0 +1,11 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "env": {
+    "NEXT_PUBLIC_NETWORK": "devnet",
+    "NEXT_PUBLIC_PROGRAM_ID": "8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc",
+    "NEXT_PUBLIC_ADRENA_API": "https://datapi.adrena.trade"
+  }
+}
