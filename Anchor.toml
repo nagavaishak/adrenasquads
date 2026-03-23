@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 adrena_squads = "8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc"
 
+[programs.devnet]
+adrena_squads = "8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
