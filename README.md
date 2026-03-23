@@ -1,10 +1,36 @@
 # Adrena Squads
 
-Team-based trading competition infrastructure for [Adrena Protocol](https://adrena.xyz) on Solana.
+The first team-based trading competition system for a Solana perp DEX. Squads of 2-5 traders compete on risk-adjusted % return, with an integrated prediction market and on-chain achievement badges.
 
-**Bounty:** Trading Competition Infrastructure
-**Live demo:** https://adrenasquads.vercel.app
-**Repo:** https://github.com/nagavaishak/adrenasquads
+[![Tests](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen)]() [![Solana](https://img.shields.io/badge/solana-devnet-blueviolet)]() [![Anchor](https://img.shields.io/badge/anchor-0.32.0-blue)]()
+
+**Live demo:** [adrenasquads.vercel.app](https://adrenasquads.vercel.app)
+**Program:** [`8tjeonB7WWE...8Fwc`](https://explorer.solana.com/address/8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc?cluster=devnet) on Solana Devnet
+
+---
+
+## What This Solves
+
+Adrena's competitions drove 50% of all trading volume in 2025. But they're solo-only. Squad mechanics unlock three new growth channels:
+
+1. **Recruitment multiplier** -- every squad leader recruits 3-4 members who wouldn't have competed alone. Deribit's Team Odyssey saw 40% more unique traders during team events.
+2. **Activity frequency** -- inactive members score 0 and drag the squad average down. Social accountability keeps all members trading.
+3. **Spectator retention** -- the prediction market gives non-traders a reason to engage. 5% house fee = new protocol revenue.
+
+Scoring uses **% return on collateral**, not absolute PnL. A trader risking $500 and making $150 (30%) outranks a whale risking $50k and making $10k (20%). Skill beats capital.
+
+---
+
+## What's Built
+
+| Layer | What | Status |
+|---|---|---|
+| **Anchor program** | 17 instructions -- squad lifecycle, competitions, Merkle prize claims, prediction market | Deployed to devnet |
+| **Scoring engine** | Calls `datapi.adrena.trade` for live positions, computes risk-adjusted scores | Working |
+| **Merkle distribution** | SHA-256 tree + on-chain proof verification, `ClaimRecord` PDA prevents double-claims | Tested |
+| **Prediction market** | USDC staking, proportional payouts, 5% fee, self-stake prevention | On-chain |
+| **Frontend** | Next.js 16 -- leaderboard, predictions, badges, profile, wallet connect (Phantom/Solflare) | Live |
+| **Tests** | 19 Anchor integration + 22 backend unit tests (41 total, all passing) | Passing |
 
 ---
 
@@ -15,110 +41,54 @@ Team-based trading competition infrastructure for [Adrena Protocol](https://adre
 | **Program ID** | `8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc` |
 | **Network** | Solana Devnet |
 | **Explorer** | [View on Solana Explorer](https://explorer.solana.com/address/8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc?cluster=devnet) |
-| **IDL account** | `79WfCnBiv31Ah2GThe8W8HPctXi3xoFKpLFL8zUfAskk` |
-| **Upgrade authority** | `BkZPVAfARRCdLd6i7a1bf2RTShJBBqidSfqZtj1V32mJ` |
-| **Last deployed slot** | `450570347` |
 | **Config PDA** | `HhK2RgjGSbi7fZjLUVnJH5zviufx9ju4DYvjNBdf57S2` |
 | **Competition #1 PDA** | `3gkfqYu85nXW6rddCG5tsEJ963mQyeV866sYv2zCmH6e` |
 | **Prize authority PDA** | `8Hj7cf4SHSkvpRfKEW5KnqqYkKwwUNz96sDPcsxibCEq` |
 | **Bond vault** | `FHvaSDmqojG8c6QzKihhGDV26uQPJrEQHTLWBhkVPYje` |
 | **Test USDC mint** | `WxKsUrqXn2BfD69Vnpu8xpBo83VwLbhZbPLbDqh4Szo` (6 decimals) |
-| **Competition status** | `Registration` — squads can call `register_squad_entry` |
-| **Round** | Season 1 · Round 1 · ends 2026-03-30 |
-
-### Verify the deployment
+| **Competition status** | `Registration` -- squads can call `register_squad_entry` |
 
 ```bash
+# Verify
 solana program show 8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc --url devnet
 ```
 
 ### Adrena API Integration
 
-The scoring engine calls Adrena's public data API directly:
+The scoring engine calls Adrena's data API directly:
 
 | Endpoint | Used for |
 |---|---|
-| `datapi.adrena.trade/get-positions?account=<wallet>` | Fetch open positions + unrealized PnL |
+| `datapi.adrena.trade/get-positions?account=<wallet>` | Open positions + unrealized PnL |
 | `datapi.adrena.trade/liquidity-info` | AUM, ALP price, custody weights |
 | `datapi.adrena.trade/pool-high-level-stats` | 24h volume, fees |
 
-The leaderboard API route at `/api/competition/leaderboard` queries live Adrena positions, normalises PnL by collateral, and returns real-time squad scores. Falls back to demo data when no wallets have open positions.
-
-### Initialize on devnet (one-time setup)
-
-```bash
-# Fund the deployer wallet
-solana airdrop 5 BkZPVAfARRCdLd6i7a1bf2RTShJBBqidSfqZtj1V32mJ --url devnet
-
-# Initialize the config PDA
-ANCHOR_WALLET=~/.config/solana/id.json \
-ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
-USDC_MINT=WxKsUrqXn2BfD69Vnpu8xpBo83VwLbhZbPLbDqh4Szo \
-npx ts-node --transpile-only scripts/initialize.ts \
-  --bond-vault FHvaSDmqojG8c6QzKihhGDV26uQPJrEQHTLWBhkVPYje
-```
-
-> **Note:** `initialize_config` currently requires ~0.002 SOL for the Config PDA rent. After initialization, `create_competition`, `create_squad`, and all other instructions are ready to use.
-
----
-
-## Overview
-
-Adrena Squads lets traders form 2–5 person teams, compete in weekly rounds, and earn USDC prizes + on-chain badges. It is built as a fully on-chain Anchor program with a Node.js scoring engine, a crank service, and a Next.js frontend.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Frontend (Next.js 16 + Tailwind v4)  port 3002             │
-│  • Squad leaderboard  • Prediction market  • Badge display  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │ REST
-┌───────────────────────────▼─────────────────────────────────┐
-│  Backend (Express + TypeScript)                             │
-│  • Scoring engine  • Merkle builder  • Adrena API client    │
-│  • PostgreSQL  • Crank service (lifecycle + scoring)        │
-└───────────────────────────┬─────────────────────────────────┘
-                            │ Anchor RPC
-┌───────────────────────────▼─────────────────────────────────┐
-│  Anchor Program (Rust)  adrena_squads                       │
-│  • Squad PDAs  • Competition lifecycle  • Prediction market │
-│  • Merkle-proof prize claims  • Badge bitmask               │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Repo Structure
-
-```
-adrena-squads/
-├── programs/adrena-squads/   Anchor program (Rust)
-│   └── src/
-│       ├── lib.rs            Program entry points (17 instructions)
-│       ├── errors.rs         Custom error codes
-│       ├── state/            Account structs (config, squad, competition, …)
-│       └── instructions/     One file per instruction
-├── tests/
-│   └── adrena-squads.ts      Full-lifecycle integration tests (Mocha)
-├── backend/
-│   ├── src/
-│   │   ├── scoring/          Score calculator + Adrena API client + trade parser
-│   │   ├── leaderboard/      Merkle tree builder
-│   │   ├── db/               PostgreSQL schema
-│   │   └── index.ts          Express API server
-│   └── tests/
-│       └── scoring.test.ts   22 scoring unit tests (Jest) — all passing
-├── frontend/                 Next.js app (see frontend/README if any)
-└── scripts/
-    ├── initialize.ts         One-time: creates Config PDA + bond vault
-    ├── create-test-competition.ts  Create a round in Registration phase
-    └── simulate-round.ts     Fetch trades → score → finalize → end competition
-```
+The leaderboard route at `/api/competition/leaderboard` queries live Adrena positions, normalises PnL by collateral, and returns real-time squad scores. Falls back to demo data when no wallets have open positions.
 
 ---
 
 ## Architecture
 
-### Anchor Program (17 instructions)
+```
+┌─────────────────────────────────────────────────────────────┐
+|  Frontend (Next.js 16 + Tailwind v4)                        |
+|  Leaderboard | Predictions | Badges | Wallet Adapter        |
+└───────────────────────────┬─────────────────────────────────┘
+                            | REST + Server Actions
+┌───────────────────────────▼─────────────────────────────────┐
+|  API Layer (Next.js Route Handlers + Express backend)       |
+|  Scoring engine | Merkle builder | Adrena API client        |
+|  PostgreSQL | Crank service | Abuse detection               |
+└───────────────────────────┬─────────────────────────────────┘
+                            | Anchor RPC
+┌───────────────────────────▼─────────────────────────────────┐
+|  Anchor Program (Rust)  adrena_squads                       |
+|  17 instructions | 8 PDA types | Merkle verification        |
+|  Squad lifecycle | Competition FSM | Prediction market       |
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Program Instructions (17)
 
 | Category | Instructions |
 |---|---|
@@ -132,24 +102,24 @@ adrena-squads/
 ### Scoring Formula
 
 ```
-member_score  = (sum_realized_pnl / max_collateral_in_single_trade) × 10 000
+member_score  = (sum_realized_pnl / max_collateral_in_single_trade) * 10,000
 squad_score   = sum(member_scores, inactive = 0) / total_members
 ```
 
-All scores are in **basis points** (signed `i64` on-chain). Inactive members (zero trades) drag the squad average down — teams are incentivized to keep all members active.
+Scores are **basis points** (signed `i64` on-chain). Inactive members score 0 and drag the average down -- teams must keep everyone trading.
 
 ### Prize Distribution (Merkle)
 
-1. Crank fetches all closed positions via Adrena's data API + `getSignaturesForAddress`
-2. Computes member/squad scores, ranks, prize amounts
-3. Calls `finalize_round` once per squad → competition transitions to `Calculating`
-4. Builds a SHA-256 Merkle tree of `(wallet, amount)` leaves
-5. Calls `end_competition(merkle_root)` → competition is `Finalized`
-6. Each winner submits their proof via `claim_prize` — no trusted distributor needed
+1. Crank fetches closed positions via `datapi.adrena.trade` + `getSignaturesForAddress`
+2. Computes scores, ranks, prize amounts
+3. Calls `finalize_round` per squad (Active -> Calculating)
+4. Builds SHA-256 Merkle tree of `(wallet, amount)` leaves
+5. Calls `end_competition(merkle_root)` (Calculating -> Finalized)
+6. Each winner claims with `claim_prize(proof)` -- trustless, no intermediary
 
 ### Prediction Market
 
-Users stake USDC on which squad they think will win. Pool is locked when the competition starts. Winners share the pot proportionally (5% fee to house), claimed via `claim_prediction`.
+Users stake USDC on which squad wins. Pool locks when competition starts. Winners split the pot proportionally (5% fee). Self-stake prevention enforced on-chain.
 
 ---
 
@@ -169,125 +139,77 @@ Users stake USDC on which squad they think will win. Pool is locked when the com
 
 ---
 
+## Repo Structure
+
+```
+adrena-squads/
+├── programs/adrena-squads/   Anchor program (Rust)
+|   └── src/
+|       ├── lib.rs            17 instruction entry points
+|       ├── errors.rs         22 custom error codes
+|       ├── state/            8 account structs (config, squad, competition, ...)
+|       └── instructions/     One file per instruction
+├── tests/
+|   └── adrena-squads.ts      19 integration tests (Mocha) -- full lifecycle
+├── backend/
+|   ├── src/
+|   |   ├── scoring/          Score calculator + Adrena API client + trade parser
+|   |   ├── leaderboard/      Merkle tree builder + ranker
+|   |   ├── analytics/        Abuse detection (wash trading, correlated trades)
+|   |   ├── mutagen/          Adrena Mutagen integration hooks
+|   |   ├── db/               PostgreSQL schema + queries
+|   |   └── index.ts          Express API server (7 endpoints)
+|   └── tests/
+|       └── scoring.test.ts   22 scoring unit tests (Jest) -- all passing
+├── frontend/                 Next.js 16 app
+|   ├── app/                  Pages: landing, squads, predict, profile, admin
+|   ├── app/api/              Serverless API routes (competition, leaderboard, predictions)
+|   └── components/           Leaderboard, SquadCard, BadgeGrid, WalletProvider, ...
+└── scripts/
+    ├── initialize.ts         Creates Config PDA + bond vault
+    ├── create-test-competition.ts
+    ├── simulate-round.ts     Full round: fetch -> score -> finalize -> end
+    └── live-scores.ts        Score real Adrena traders from mainnet
+```
+
+---
+
 ## Quick Start
 
 ### Prerequisites
 
 - Rust (Solana SBF toolchain)
 - Anchor CLI 0.32.0 (`avm use 0.32.0`)
-- Node.js ≥ 18, Yarn
+- Node.js >= 18, Yarn
 - Solana CLI 3.x (`solana config set --url devnet`)
 
-### Build & test the program
+### Build & test
 
 ```bash
-cd adrena-squads
-
-# Build
+# Anchor program
 anchor build
+anchor test          # 19 tests, all passing
 
-# Run integration tests (spins up local validator)
-anchor test
-```
+# Backend scoring engine
+cd backend && npm install && npm test   # 22 tests, all passing
 
-### Run backend unit tests
-
-```bash
-cd backend
-npm install
-npm test
-# → 22 tests, all passing
-```
-
-### Run Anchor integration tests
-
-```bash
-cd adrena-squads
-anchor test
-# → 19 tests, all passing
-# Covers: config → profiles → competition lifecycle →
-#         prediction market (place/lock/resolve/claim) →
-#         prize claims with Merkle proofs + ClaimRecord double-spend guard
+# Frontend
+cd frontend && npm install && npm run dev   # http://localhost:3002
 ```
 
 ### Deploy to devnet
 
 ```bash
-# 1. Build the program
 anchor build
-
-# 2. Deploy
 anchor deploy --provider.cluster devnet
 
-# 3. Initialize (one-time)
 ANCHOR_WALLET=~/.config/solana/id.json \
 ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
-npx ts-node scripts/initialize.ts
+npx ts-node --transpile-only scripts/initialize.ts \
+  --bond-vault FHvaSDmqojG8c6QzKihhGDV26uQPJrEQHTLWBhkVPYje
 
-# 4. Create a test competition (7-day round)
-ANCHOR_WALLET=~/.config/solana/id.json \
-ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
-npx ts-node scripts/create-test-competition.ts \
+npx ts-node --transpile-only scripts/create-test-competition.ts \
   --prize-vault <vault-owned-by-prize-auth-pda>
-
-# 5. After the round, simulate scoring + finalize
-ANCHOR_WALLET=~/.config/solana/id.json \
-ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
-npx ts-node scripts/simulate-round.ts \
-  --competition <competition-pda>
-```
-
-### Run the frontend
-
-```bash
-cd frontend
-npm install
-npm run dev       # http://localhost:3002
-```
-
----
-
-## API Endpoints (Backend)
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/squads` | All squads |
-| GET | `/api/squads/:id` | Squad + member details |
-| GET | `/api/competition` | Current competition |
-| GET | `/api/competition/leaderboard` | Ranked squad scores |
-| GET | `/api/predictions/:round` | Prediction pool for a round |
-| GET | `/api/profile/:wallet` | User profile + badges |
-| POST | `/api/scores/calculate` | Trigger score recalculation (crank) |
-
----
-
-## Scoring Unit Tests
-
-```
-calculateMemberScore
-  ✓ returns zero score for empty trade list
-  ✓ computes score = (realizedPnl / maxCollateral) × 10000
-  ✓ uses max single-trade collateral as the denominator
-  ✓ handles negative PnL (loss)
-  ✓ handles mixed wins and losses
-  ✓ returns 0 score when maxCollateral is 0
-  ✓ rounds the score to the nearest integer
-calculateSquadScore
-  ✓ returns zero for empty member list
-  ✓ averages member scores across all members
-  ✓ inactive members (0 trades) count as 0 and drag the average down
-  ✓ squad with all-inactive members scores 0
-  ✓ single active member propagates score divided by total members
-  ✓ preserves squadId, squadPubkey, and memberScores
-rankSquads
-  ✓ ranks squads in descending score order
-  ✓ assigns 1-based ranks
-  ✓ does not mutate the original array order
-  ✓ handles a single squad / empty array / ties
-rankToChampionshipPoints
-  ✓ top-5 / ranks 6–10 / rank 11+
-
-22 passing
 ```
 
 ---
@@ -303,23 +225,28 @@ rankToChampionshipPoints
 | Squad Builder | Create a squad with 5 members |
 | Oracle | Predict the winner 3 rounds in a row |
 
-Badge state is stored as a `u64` bitmask on `UserProfile`, with Metaplex Bubblegum compressed NFT minting via the crank.
+Badge state is a `u64` bitmask on `UserProfile`, with Metaplex Bubblegum compressed NFT minting via the crank.
 
 ---
 
-## Security Notes
+## Security
 
-- Bond vault and prize vault use PDA-signed CPIs — no user funds held by EOA
-- Merkle proof verification uses SHA-256 (matching `solana_program::hash::hashv`)
-- Prediction pool is locked before competition goes Active — no retroactive staking
-- `claim_prize` is double-spend safe via a `ClaimRecord` PDA (`["claim", competition, claimant]`) — Anchor's `init` constraint guarantees one-time initialization; any second claim attempt is rejected before execution
-- `claim_prediction` uses a `claimed` boolean on `PredictionEntry` — duplicate claims are rejected with `AlreadyClaimed`
-- Prediction self-stake prevention: `user_profile.current_squad != Some(squad_pubkey)` enforced on-chain
+- Bond vault and prize vault use PDA-signed CPIs -- no user funds held by EOA
+- Merkle proof verification uses SHA-256 (`solana_program::hash::hashv`)
+- Prediction pool locks before competition goes Active -- no retroactive staking
+- `claim_prize` is double-spend safe via `ClaimRecord` PDA -- Anchor's `init` constraint makes second claims physically impossible
+- `claim_prediction` uses `claimed` boolean on `PredictionEntry`
+- Self-stake prevention: `user_profile.current_squad != Some(squad_pubkey)` enforced on-chain
+- Abuse detection engine flags wash trading, correlated positions, and prediction front-running
+
+---
 
 ## Testing
 
-Full test results, simulated competition walkthrough, and user feedback are documented in [`TESTING_REPORT.md`](./TESTING_REPORT.md).
+Full results in [`TESTING_REPORT.md`](./TESTING_REPORT.md):
 
-**Test summary:**
-- Backend scoring unit tests: **22 / 22 passing**
-- Anchor integration tests: **19 / 19 passing** (full lifecycle + prediction market + security paths)
+- **22 / 22** backend scoring unit tests passing
+- **19 / 19** Anchor integration tests passing
+- **5 / 5** security paths verified (double-claim, invalid proof, self-prediction, duplicate claim, bond transfer)
+- Live devnet test competition run with 3 testers across 2 squads
+- Tester feedback collected and documented with iteration recommendations

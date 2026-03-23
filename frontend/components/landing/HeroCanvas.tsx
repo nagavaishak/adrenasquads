@@ -80,10 +80,14 @@ export default function HeroCanvas() {
     const cx  = c.getContext("2d")!;
     const N   = 200; // points per line
 
-    // ── Resize ──────────────────────────────────────────────────────────────
+    // ── Resize (HiDPI-aware) ─────────────────────────────────────────────────
     const resize = () => {
-      c.width  = window.innerWidth;
-      c.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      c.width  = window.innerWidth  * dpr;
+      c.height = window.innerHeight * dpr;
+      c.style.width  = `${window.innerWidth}px`;
+      c.style.height = `${window.innerHeight}px`;
+      cx.scale(dpr, dpr);
     };
     resize();
     window.addEventListener("resize", resize);

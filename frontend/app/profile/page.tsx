@@ -1,19 +1,50 @@
-import BadgeGrid from "@/components/BadgeGrid";
-import { MOCK_SQUADS, formatScore, scoreClass, formatUSDC } from "@/lib/mock-data";
+"use client";
 
-const MOCK_WALLET = "9xKq...4mRz";
+import { useEffect, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import BadgeGrid from "@/components/BadgeGrid";
+import { MOCK_SQUADS, formatScore, scoreClass } from "@/lib/mock-data";
+
+interface ProfileData {
+  wallet: string;
+  competitions_entered: number;
+  total_pnl: number;
+  best_rank: number;
+  squad_name: string;
+  badges: string[];
+}
+
 const MOCK_SQUAD = MOCK_SQUADS[0];
 
-const STATS = [
-  { label: "COMPETITIONS",   value: "7" },
-  { label: "SQUAD WINS",     value: "2" },
-  { label: "BEST RANK",      value: "#01" },
-  { label: "TOTAL PnL",      value: "+18.40%", accent: "success" as const },
-  { label: "PREDICTIONS WON", value: "5/9" },
-  { label: "PRIZE EARNED",   value: "$2,750", accent: "success" as const },
-];
-
 export default function ProfilePage() {
+  const { publicKey, connected } = useWallet();
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+
+  const walletDisplay = connected && publicKey
+    ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`
+    : "Not connected";
+
+  useEffect(() => {
+    if (!connected || !publicKey) {
+      setProfile(null);
+      return;
+    }
+    fetch(`/api/profile/${publicKey.toBase58()}`)
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setProfile(j.data); })
+      .catch(() => {});
+  }, [connected, publicKey]);
+
+  const STATS = [
+    { label: "COMPETITIONS", value: profile ? String(profile.competitions_entered) : "7" },
+    { label: "SQUAD WINS", value: "2" },
+    { label: "BEST RANK", value: profile ? `#${String(profile.best_rank).padStart(2, "0")}` : "#01" },
+    { label: "TOTAL PnL", value: profile ? `+${(profile.total_pnl / 100).toFixed(2)}%` : "+18.40%", accent: "success" as const },
+    { label: "PREDICTIONS WON", value: "5/9" },
+    { label: "PRIZE EARNED", value: "$2,750", accent: "success" as const },
+  ];
+
   return (
     <div className="page-container" style={{ maxWidth: 800 }}>
       <h1 style={{ fontSize: 18, fontWeight: 600, letterSpacing: "0.02em", marginBottom: 24 }}>
@@ -42,54 +73,67 @@ export default function ProfilePage() {
               width: 40,
               height: 40,
               borderRadius: 3,
-              backgroundColor: "var(--accent-dim)",
-              border: "1px solid rgba(249,115,22,0.3)",
+              backgroundColor: connected ? "var(--accent-dim)" : "var(--surface)",
+              border: `1px solid ${connected ? "rgba(249,115,22,0.3)" : "var(--border)"}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 14,
               fontWeight: 600,
-              color: "var(--accent)",
+              color: connected ? "var(--accent)" : "var(--text-muted)",
               letterSpacing: "0.04em",
               flexShrink: 0,
             }}
           >
-            9X
+            {connected && publicKey ? publicKey.toBase58().slice(0, 2).toUpperCase() : "??"}
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 500, fontFamily: "monospace" }}>
-              {MOCK_WALLET}
+              {walletDisplay}
             </div>
             <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>
-              SEASON 1 PARTICIPANT
+              {connected ? (profile?.squad_name ?? "SEASON 1 PARTICIPANT") : "CONNECT YOUR WALLET"}
             </div>
           </div>
         </div>
 
-        <button
+        <WalletMultiButton
           style={{
             padding: "7px 16px",
-            backgroundColor: "transparent",
-            border: "1px solid var(--border)",
+            backgroundColor: connected ? "transparent" : "var(--accent)",
+            border: `1px solid ${connected ? "var(--border)" : "var(--accent)"}`,
             borderRadius: 3,
-            color: "var(--text-muted)",
+            color: connected ? "var(--text-muted)" : "#000",
             fontSize: 11,
-            cursor: "pointer",
-            fontFamily: "monospace",
+            fontFamily: "var(--font-ibm-mono), monospace",
             letterSpacing: "0.06em",
+            height: "auto",
+            lineHeight: "1.4",
           }}
-        >
-          CONNECT WALLET
-        </button>
+        />
       </div>
 
-      {/* Stats grid — 2 cols on mobile, 3 on desktop */}
+      {!connected && (
+        <div
+          style={{
+            backgroundColor: "rgba(249,115,22,0.05)",
+            border: "1px solid rgba(249,115,22,0.15)",
+            borderRadius: 4,
+            padding: "14px 16px",
+            marginBottom: 16,
+            fontSize: 11,
+            color: "var(--text-muted)",
+            lineHeight: 1.7,
+          }}
+        >
+          Connect a Solana wallet to view your on-chain profile, squad membership, and achievement badges.
+          This demo runs on <strong style={{ color: "var(--accent)" }}>devnet</strong> &mdash; no real funds required.
+        </div>
+      )}
+
+      {/* Stats grid */}
       <div
-        style={{
-          display: "grid",
-          gap: 8,
-          marginBottom: 16,
-        }}
+        style={{ display: "grid", gap: 8, marginBottom: 16 }}
         className="stats-grid"
       >
         {STATS.map(({ label, value, accent }) => (
@@ -110,10 +154,7 @@ export default function ProfilePage() {
                 fontSize: 18,
                 fontWeight: 700,
                 fontFamily: "monospace",
-                color:
-                  accent === "success"
-                    ? "var(--success)"
-                    : "var(--text)",
+                color: accent === "success" ? "var(--success)" : "var(--text)",
               }}
             >
               {value}
@@ -125,14 +166,7 @@ export default function ProfilePage() {
       <div className="col-layout-profile">
         {/* Badges */}
         <div>
-          <div
-            style={{
-              fontSize: 10,
-              letterSpacing: "0.1em",
-              color: "var(--text-muted)",
-              marginBottom: 10,
-            }}
-          >
+          <div style={{ fontSize: 10, letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: 10 }}>
             ACHIEVEMENT BADGES
           </div>
           <BadgeGrid unlockedIds={["streak", "diamond", "builder"]} />
@@ -140,14 +174,7 @@ export default function ProfilePage() {
 
         {/* Current squad */}
         <div>
-          <div
-            style={{
-              fontSize: 10,
-              letterSpacing: "0.1em",
-              color: "var(--text-muted)",
-              marginBottom: 10,
-            }}
-          >
+          <div style={{ fontSize: 10, letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: 10 }}>
             CURRENT SQUAD
           </div>
           <div
@@ -168,7 +195,7 @@ export default function ProfilePage() {
             >
               <div>
                 <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 3 }}>
-                  {MOCK_SQUAD.name}
+                  {profile?.squad_name ?? MOCK_SQUAD.name}
                 </div>
                 <div style={{ fontSize: 9, letterSpacing: "0.06em", color: "var(--text-muted)" }}>
                   LEADER
@@ -199,16 +226,18 @@ export default function ProfilePage() {
                     style={{
                       fontSize: 10,
                       fontFamily: "monospace",
-                      color: m === MOCK_WALLET ? "var(--accent)" : "var(--text-muted)",
+                      color: i === 0 && connected ? "var(--accent)" : "var(--text-muted)",
                       display: "flex",
                       alignItems: "center",
                       gap: 4,
                     }}
                   >
-                    {m === MOCK_WALLET && (
+                    {i === 0 && connected && (
                       <span style={{ fontSize: 7, color: "var(--accent)" }}>●</span>
                     )}
-                    {m}
+                    {i === 0 && connected && publicKey
+                      ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`
+                      : m}
                   </div>
                 ))}
               </div>
@@ -222,7 +251,7 @@ export default function ProfilePage() {
                 {formatScore(MOCK_SQUAD.aggregateScore)}
               </div>
               <div style={{ fontSize: 9, color: "var(--text-muted)", marginTop: 2 }}>
-                squad score · round 3
+                squad score &middot; round 3
               </div>
             </div>
           </div>

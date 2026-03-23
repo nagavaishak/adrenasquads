@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import Providers from "@/components/Providers";
 
 const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={ibmPlexMono.variable}>
       <body style={{ fontFamily: "var(--font-ibm-mono), monospace" }}>
-        <AppShell>{children}</AppShell>
+        <Providers>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

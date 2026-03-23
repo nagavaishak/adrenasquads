@@ -1,13 +1,53 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import SquadCard from "@/components/SquadCard";
 import { MOCK_SQUADS, MOCK_PREDICTIONS, MOCK_COMPETITION, formatUSDC } from "@/lib/mock-data";
 
+interface PredictionSquad {
+  squadPubkey: string;
+  totalStaked: number;
+  predictionCount: number;
+  impliedOdds: number;
+}
+
+interface PredictionPool {
+  totalStaked: number;
+  squads: PredictionSquad[];
+}
+
 export default function PredictPage() {
+  const { connected } = useWallet();
   const [stakes, setStakes] = useState<Record<string, number>>({});
   const [placed, setPlaced] = useState<Set<string>>(new Set());
+  const [pool, setPool] = useState<PredictionPool | null>(null);
 
-  const totalStaked = MOCK_PREDICTIONS.reduce((s, p) => s + p.totalStaked, 0);
+  useEffect(() => {
+    fetch("/api/predictions/1")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setPool(j.data); })
+      .catch(() => {});
+  }, []);
+
+  // Build prediction display from API data or fallback
+  const predictions = pool
+    ? pool.squads.map((s) => {
+        const squad = MOCK_SQUADS.find((sq) => sq.pubkey === s.squadPubkey);
+        return {
+          squadPubkey: s.squadPubkey,
+          squadName: squad?.name ?? `Squad ${s.squadPubkey.slice(0, 6)}`,
+          totalStaked: s.totalStaked * 1_000_000,
+          predictionCount: s.predictionCount,
+          impliedOdds: 1 / (pool.squads.length > 0 ? s.totalStaked / pool.totalStaked : 1),
+        };
+      })
+    : MOCK_PREDICTIONS;
+
+  const totalStaked = pool
+    ? pool.totalStaked * 1_000_000
+    : predictions.reduce((s, p) => s + p.totalStaked, 0);
 
   function handleStake(squadPubkey: string) {
     setPlaced((prev) => new Set([...prev, squadPubkey]));
@@ -82,42 +122,42 @@ export default function PredictPage() {
           </div>
         </div>
 
-        {/* Stacked odds bar — scrollable on very narrow screens */}
+        {/* Stacked odds bar */}
         <div style={{ marginBottom: 6 }}>
           <div style={{ fontSize: 9, letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: 6 }}>
             POOL DISTRIBUTION
           </div>
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <div
-            style={{
-              height: 8,
-              borderRadius: 2,
-              overflow: "hidden",
-              display: "flex",
-              gap: 1,
-              minWidth: 280,
-            }}
-          >
-            {MOCK_PREDICTIONS.map((p, i) => {
-              const colors = ["var(--accent)", "#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899"];
-              return (
-                <div
-                  key={p.squadPubkey}
-                  title={`${p.squadName}: ${(p.impliedOdds * 100).toFixed(1)}%`}
-                  style={{
-                    flex: p.totalStaked,
-                    backgroundColor: colors[i % colors.length],
-                    opacity: 0.8,
-                    cursor: "help",
-                  }}
-                />
-              );
-            })}
-          </div>
+            <div
+              style={{
+                height: 8,
+                borderRadius: 2,
+                overflow: "hidden",
+                display: "flex",
+                gap: 1,
+                minWidth: 280,
+              }}
+            >
+              {predictions.map((p, i) => {
+                const colors = ["var(--accent)", "#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899"];
+                return (
+                  <div
+                    key={p.squadPubkey}
+                    title={`${p.squadName}: ${((p.totalStaked / totalStaked) * 100).toFixed(1)}%`}
+                    style={{
+                      flex: p.totalStaked,
+                      backgroundColor: colors[i % colors.length],
+                      opacity: 0.8,
+                      cursor: "help",
+                    }}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {MOCK_PREDICTIONS.map((p, i) => {
+          {predictions.map((p, i) => {
             const colors = ["var(--accent)", "#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899"];
             return (
               <div key={p.squadPubkey} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 9 }}>
@@ -131,7 +171,7 @@ export default function PredictPage() {
                   }}
                 />
                 <span style={{ color: "var(--text-muted)" }}>
-                  {p.squadName.split(" ").slice(0, 2).join(" ")} {(p.impliedOdds * 100).toFixed(0)}%
+                  {p.squadName.split(" ").slice(0, 2).join(" ")} {((p.totalStaked / totalStaked) * 100).toFixed(0)}%
                 </span>
               </div>
             );
@@ -139,7 +179,7 @@ export default function PredictPage() {
         </div>
       </div>
 
-      {/* Squad grid — auto-fill on desktop, single column on very small screens */}
+      {/* Squad grid */}
       <div
         style={{
           display: "grid",
@@ -148,7 +188,7 @@ export default function PredictPage() {
         }}
       >
         {MOCK_SQUADS.slice(0, 6).map((squad) => {
-          const pred = MOCK_PREDICTIONS.find((p) => p.squadPubkey === squad.pubkey);
+          const pred = predictions.find((p) => p.squadPubkey === squad.pubkey);
           const isPlaced = placed.has(squad.pubkey);
 
           return isPlaced ? (
@@ -188,11 +228,49 @@ export default function PredictPage() {
         })}
       </div>
 
-      <p style={{ marginTop: 20, fontSize: 10, color: "var(--text-muted)", lineHeight: 1.7 }}>
-        Squad members cannot predict on their own squad.
-        Predictions lock when competition starts.
-        Connect wallet to place a real prediction on devnet.
-      </p>
+      {/* Wallet connect prompt */}
+      {!connected && (
+        <div
+          style={{
+            marginTop: 20,
+            backgroundColor: "rgba(249,115,22,0.05)",
+            border: "1px solid rgba(249,115,22,0.15)",
+            borderRadius: 4,
+            padding: "14px 16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <p style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.7, margin: 0 }}>
+            Connect your wallet to place real predictions on devnet. Squad members cannot predict on their own squad.
+          </p>
+          <WalletMultiButton
+            style={{
+              padding: "7px 14px",
+              backgroundColor: "var(--accent)",
+              border: "none",
+              borderRadius: 3,
+              color: "#000",
+              fontSize: 11,
+              fontFamily: "var(--font-ibm-mono), monospace",
+              letterSpacing: "0.06em",
+              height: "auto",
+              lineHeight: "1.4",
+              flexShrink: 0,
+            }}
+          />
+        </div>
+      )}
+
+      {connected && (
+        <p style={{ marginTop: 20, fontSize: 10, color: "var(--text-muted)", lineHeight: 1.7 }}>
+          Squad members cannot predict on their own squad (enforced on-chain).
+          Predictions lock when competition starts. Pool payouts are proportional minus 5% house fee.
+        </p>
+      )}
     </div>
   );
 }
