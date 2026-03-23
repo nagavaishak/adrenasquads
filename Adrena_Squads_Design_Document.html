@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adrena Squads — Design Document</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #ffffff;
+    --text: #0d1117;
+    --accent: #f97316;
+    --accent2: #6366f1;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --code-bg: #f3f4f6;
+    --green: #16a34a;
+    --red: #dc2626;
+    --table-head: #f9fafb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: end;
+  }
+  .cover-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .cover-logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: white; font-weight: 700;
+  }
+  .cover-logo-text { font-size: 14pt; font-weight: 700; letter-spacing: -0.5px; }
+  h1.title {
+    font-size: 26pt;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 12pt;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    padding: 16px 20px;
+    background: var(--table-head);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 9pt;
+    min-width: 200px;
+    align-self: end;
+  }
+  .meta-label { color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 7.5pt; }
+  .meta-value { font-weight: 600; margin-top: 2px; }
+
+  /* ── Headings ── */
+  h2 {
+    font-size: 15pt;
+    font-weight: 700;
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--border);
+    letter-spacing: -0.4px;
+  }
+  h2 .num {
+    color: var(--accent);
+    margin-right: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10pt;
+    font-weight: 500;
+  }
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    margin: 24px 0 10px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 10pt;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Body text ── */
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 8px 0 12px 20px; }
+  li { margin-bottom: 5px; }
+  strong { font-weight: 600; }
+
+  /* ── Callout ── */
+  .callout {
+    background: #fff7ed;
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 20px 0;
+    font-size: 10pt;
+  }
+  .callout-title { font-weight: 700; color: var(--accent); margin-bottom: 4px; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .callout-blue {
+    background: #eff6ff;
+    border-left-color: var(--accent2);
+  }
+  .callout-blue .callout-title { color: var(--accent2); }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 9.5pt; }
+  th {
+    background: var(--table-head);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--muted);
+  }
+  td { padding: 8px 12px; border: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .check { color: var(--green); font-weight: 700; }
+  .cross { color: var(--red); }
+  .warn { color: #d97706; }
+
+  /* ── Code / formulas ── */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9pt;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.5pt;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+    line-height: 1.6;
+  }
+
+  /* ── Formula box ── */
+  .formula {
+    background: #0d1117;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 16px 0 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5pt;
+    line-height: 1.8;
+  }
+  .formula .var { color: #f97316; }
+  .formula .op { color: #60a5fa; }
+  .formula .comment { color: #6b7280; font-style: italic; }
+
+  /* ── Architecture diagram ── */
+  .arch {
+    background: #0d1117;
+    color: #c9d1d9;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.5pt;
+    line-height: 1.8;
+  }
+  .arch .layer-frontend { color: #f97316; }
+  .arch .layer-backend { color: #60a5fa; }
+  .arch .layer-chain { color: #34d399; }
+  .arch .dim { color: #6b7280; }
+
+  /* ── Stat grid ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .stat-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .stat-card .stat-label { font-size: 8pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .stat-value { font-size: 18pt; font-weight: 700; margin: 4px 0; color: var(--text); letter-spacing: -0.5px; }
+  .stat-card .stat-desc { font-size: 8.5pt; color: var(--muted); }
+
+  /* ── Timeline ── */
+  .timeline { border-left: 2px solid var(--border); padding-left: 20px; margin: 16px 0; }
+  .timeline-item { position: relative; margin-bottom: 16px; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -25px; top: 5px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .timeline-item .tl-title { font-weight: 600; font-size: 10pt; }
+  .timeline-item .tl-desc { color: var(--muted); font-size: 9pt; }
+
+  /* ── Flow diagram ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 16px 0 24px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .flow-step {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 9pt;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .flow-arrow { color: var(--accent); font-weight: 700; padding: 0 4px; font-size: 12pt; }
+  .flow-step.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 0; max-width: none; }
+    h2 { page-break-before: auto; }
+    .no-break { page-break-inside: avoid; }
+    @page { margin: 1.5cm 2cm; size: A4; }
+  }
+
+  /* ── Misc ── */
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 7.5pt;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .badge-blue { background: var(--accent2); }
+  .badge-green { background: var(--green); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  .footnote { font-size: 8.5pt; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<!-- ── Cover ────────────────────────────────────────────────── -->
+<div class="cover">
+  <div>
+    <div class="cover-logo">
+      <div class="cover-logo-icon">A</div>
+      <div class="cover-logo-text">ADRENA PROTOCOL</div>
+    </div>
+    <h1 class="title">Adrena Squads</h1>
+    <p class="subtitle">Team-Based Trading Competition Module<br>Design Document &amp; Architecture Overview</p>
+  </div>
+  <div class="meta-grid">
+    <div>
+      <div class="meta-label">Author</div>
+      <div class="meta-value">Prithivan</div>
+    </div>
+    <div>
+      <div class="meta-label">Date</div>
+      <div class="meta-value">March 2026</div>
+    </div>
+    <div>
+      <div class="meta-label">Status</div>
+      <div class="meta-value" style="color:#f97316">Bounty Submission</div>
+    </div>
+    <div>
+      <div class="meta-label">Network</div>
+      <div class="meta-value">Solana Devnet</div>
+    </div>
+    <div>
+      <div class="meta-label">Program ID</div>
+      <div class="meta-value" style="font-family:monospace;font-size:7pt">8tjeonB7...</div>
+    </div>
+    <div>
+      <div class="meta-label">Tests</div>
+      <div class="meta-value" style="color:#16a34a">41 passing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Key stats ── -->
+<div class="stat-grid no-break">
+  <div class="stat-card">
+    <div class="stat-label">On-Chain Instructions</div>
+    <div class="stat-value">17</div>
+    <div class="stat-desc">Anchor program, Solana devnet</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Test Coverage</div>
+    <div class="stat-value">41</div>
+    <div class="stat-desc">22 backend + 19 Anchor integration</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Market Opportunity</div>
+    <div class="stat-value">First</div>
+    <div class="stat-desc">Team competitions on any Solana perp DEX</div>
+  </div>
+</div>
+
+<!-- ── 1. Executive Summary ──────────────────────────────────── -->
+<h2><span class="num">01</span>Executive Summary</h2>
+
+<div class="callout">
+  <div class="callout-title">The Opportunity</div>
+  No Solana perpetuals DEX currently offers team-based trading competitions. Adrena Squads fills this gap — introducing squad mechanics, skill-based scoring, spectator predictions, and compressed NFT achievement badges as an additive engagement layer over Adrena's existing infrastructure.
+</div>
+
+<p><strong>Adrena Squads</strong> addresses three specific weaknesses in the current competition system:</p>
+
+<ul>
+  <li><strong>Solo-only format</strong> — limits organic growth, no recruitment loops</li>
+  <li><strong>Whale-dominated leaderboards</strong> — absolute PnL rankings discourage retail traders</li>
+  <li><strong>No spectator engagement</strong> — non-traders have no reason to watch or participate</li>
+</ul>
+
+<p>The solution: squads of 2–5 traders compete on <em>risk-adjusted</em> (percentage return) scores. A spectator prediction market lets anyone stake USDC on competing squads. Achievement badges create long-term retention through progressive unlockables. The squad leader bonus creates viral KOL recruitment loops.</p>
+
+<!-- ── 2. Competition Format ──────────────────────────────────── -->
+<h2><span class="num">02</span>Competition Format</h2>
+
+<h3>2.1 Squad Formation</h3>
+
+<table class="no-break">
+  <tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr>
+  <tr><td>Squad size</td><td>2–5 members</td><td>Min 2 prevents solo gaming; cap of 5 keeps coordination manageable</td></tr>
+  <tr><td>Creation bond</td><td>50 USDC (refundable)</td><td>Prevents spam squad creation; returned at season end</td></tr>
+  <tr><td>Join type</td><td>Open or Invite-only</td><td>Leader can toggle; invite-only enables curated teams</td></tr>
+  <tr><td>Lock-in</td><td>At competition start</td><td>No mid-round roster changes prevent gaming</td></tr>
+  <tr><td>Solo fallback</td><td>Existing system unchanged</td><td>Non-squad traders still compete on individual leaderboard</td></tr>
+</table>
+
+<h3>2.2 Competition Structure</h3>
+
+<p>Competitions are organized into <strong>weekly rounds</strong> within a broader <strong>season</strong> (8–10 weeks):</p>
+
+<div class="arch">
+<span class="layer-frontend">Season (8–10 weeks)</span>
+<span class="dim">
+├── Week 1: Round 1
+│   ├── Squad PnL calculated from on-chain trade history
+│   ├── Individual Mutagen accrues (existing system unchanged)
+│   └── Weekly rankings → Championship Points
+├── Week 2–N: Repeating rounds
+│   └── Cumulative standings updated
+└── Final Round
+    └── Season Champion = highest cumulative Championship Points</span>
+</div>
+
+<p>Championship points scale: <strong>1st=100, 2nd=85, 3rd=70, 4th=60, 5th=50</strong>, then 40/35/30/25/20 for ranks 6–10, and 10 pts for 11th+.</p>
+
+<!-- ── 3. Scoring Mechanics ───────────────────────────────────── -->
+<h2><span class="num">03</span>Scoring Mechanics</h2>
+
+<h3>3.1 Formula</h3>
+
+<div class="formula">
+<span class="comment">// Per-member score (stored as basis points on-chain)</span>
+<span class="var">member_score</span> <span class="op">=</span> (<span class="var">realized_pnl</span> <span class="op">/</span> <span class="var">max_collateral_single_trade</span>) <span class="op">×</span> <span class="op">10,000</span>
+
+<span class="comment">// Squad aggregate (inactive members count as 0)</span>
+<span class="var">squad_score</span> <span class="op">=</span> <span class="op">Σ</span>(<span class="var">member_scores</span>) <span class="op">/</span> <span class="var">total_members</span>
+
+<span class="comment">// Example: 3 active members (+3200, +2500, +1800), 2 inactive (0, 0)</span>
+<span class="var">squad_score</span> <span class="op">=</span> (3200 + 2500 + 1800 + 0 + 0) / 5 <span class="op">=</span> +1500 bps <span class="comment">= +15.00%</span>
+</div>
+
+<h3>3.2 Why Percentage Return, Not Absolute PnL</h3>
+
+<table>
+  <tr><th>Scenario</th><th>Trader A (Whale)</th><th>Trader B (Retail)</th></tr>
+  <tr><td>Capital deployed</td><td>$100,000</td><td>$1,000</td></tr>
+  <tr><td>Realized PnL</td><td>+$15,000</td><td>+$200</td></tr>
+  <tr>
+    <td>Absolute PnL score</td>
+    <td><strong>+$15,000 (wins)</strong></td>
+    <td>+$200 (loses)</td>
+  </tr>
+  <tr>
+    <td><strong>% Return score</strong></td>
+    <td>+15%</td>
+    <td><strong>+20% (wins)</strong></td>
+  </tr>
+</table>
+
+<div class="callout">
+  <div class="callout-title">Key Insight</div>
+  Percentage return scoring makes competitions about <em>skill</em>, not capital. A $500 trader who returns 25% on their position outscores a $50,000 whale who returns 10%. This dramatically improves retail trader participation and reduces whale dominance.
+</div>
+
+<h3>3.3 Minimum Activity Requirement</h3>
+<p>Members who execute <strong>zero trades</strong> in a round score 0, dragging the squad average down. This creates an internal accountability mechanism — squads are incentivized to recruit and retain active traders, not passive stakeholders.</p>
+
+<!-- ── 4. Reward Structure ─────────────────────────────────────── -->
+<h2><span class="num">04</span>Reward Structure</h2>
+
+<h3>4.1 Prize Pool Funding</h3>
+<ul>
+  <li><strong>10% ADX buyback allocation</strong> — perpetual, self-sustaining (existing mechanism)</li>
+  <li><strong>Sponsor contributions</strong> — JTO, SOL from ecosystem partners</li>
+  <li><strong>Squad creation bonds</strong> — redistributed to winning squads at season end</li>
+</ul>
+
+<h3>4.2 Weekly Distribution</h3>
+
+<table class="no-break">
+  <tr><th>Bucket</th><th>Share</th><th>Recipient</th></tr>
+  <tr><td>Top 3 Squads</td><td>50%</td><td>30% / 15% / 5% split</td></tr>
+  <tr><td>Most Improved</td><td>20%</td><td>Biggest rank improvement week-over-week</td></tr>
+  <tr><td>Top Individual</td><td>15%</td><td>Highest single-member score across all squads</td></tr>
+  <tr><td>Raffle</td><td>15%</td><td>1 entry per 0.01 Mutagen earned (existing system)</td></tr>
+</table>
+
+<h3>4.3 Squad Leader Bonus</h3>
+<p>Squad leaders receive <strong>10% of their squad's prize allocation</strong> as a recruitment incentive. This activates KOL recruitment loops — content creators and community leaders are directly rewarded for building strong teams and bringing new traders to Adrena.</p>
+
+<h3>4.4 Season Championship</h3>
+<p>End-of-season prizes scale to <strong>3× the weekly pool</strong>. Championship standings are computed from cumulative points across all rounds, rewarding consistent performance over lucky single-round outcomes.</p>
+
+<h3>4.5 Self-Sustainability</h3>
+<p>The prize pool is funded entirely from Adrena's existing 10% ADX buyback mechanism — no new token emissions, no unsustainable incentive programs. The competition creates volume → generates fees → funds prizes → attracts traders → generates more volume.</p>
+
+<!-- ── 5. Spectator Prediction Market ────────────────────────── -->
+<h2><span class="num">05</span>Spectator Prediction Market</h2>
+
+<div class="callout callout-blue">
+  <div class="callout-title">Why This Matters</div>
+  Spectator participation turns passive observers into financially engaged participants. Every prediction placed increases volume through the prediction pool, broadens Adrena's user base beyond active traders, and creates a reason for non-traders to follow competition results closely.
+</div>
+
+<h3>5.1 Mechanics</h3>
+
+<div class="flow">
+  <div class="flow-step">Pool Opens<br><small>Registration phase</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Users Stake USDC<br><small>On any squad</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step active">Pool Locks<br><small>Competition starts</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Round Ends<br><small>Winner declared</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Claim Payout<br><small>Proportional share</small></div>
+</div>
+
+<table>
+  <tr><th>Parameter</th><th>Value</th></tr>
+  <tr><td>Maximum stake per user</td><td>100 USDC (prevents whale manipulation)</td></tr>
+  <tr><td>House fee</td><td>5% of total pool</td></tr>
+  <tr><td>Payout formula</td><td><code>(user_stake / total_winning_stakes) × pool × 0.95</code></td></tr>
+  <tr><td>Lock timing</td><td>When competition transitions Registration → Active</td></tr>
+  <tr><td>Self-prediction</td><td>Blocked on-chain (constraint on UserProfile.current_squad)</td></tr>
+  <tr><td>Claim method</td><td>On-chain <code>claim_prediction</code> with AlreadyClaimed guard</td></tr>
+</table>
+
+<h3>5.2 Security Properties</h3>
+<ul>
+  <li>Prediction pool locked before competition starts — no retroactive betting</li>
+  <li>Squad members cannot bet on their own squad (on-chain constraint)</li>
+  <li><code>PredictionEntry.claimed</code> boolean prevents double-claims</li>
+  <li>Stake vault owned by <code>pred_auth</code> PDA — no user funds held by EOA</li>
+</ul>
+
+<!-- ── 6. Achievement Badges ──────────────────────────────────── -->
+<h2><span class="num">06</span>Achievement Badges</h2>
+
+<p>Badges are stored as a <code>u64</code> bitmask on the <code>UserProfile</code> account and minted as <strong>compressed NFTs</strong> via Metaplex Bubblegum — ultra-low cost (sub-cent per mint), transferable, and composable with the broader Solana NFT ecosystem.</p>
+
+<table class="no-break">
+  <tr><th>Badge</th><th>Unlock Condition</th><th>Bit</th></tr>
+  <tr><td>🏆 Squad Champion</td><td>Finish #1 in a competition</td><td>0x01</td></tr>
+  <tr><td>🔥 Hot Streak</td><td>Win 3 consecutive rounds</td><td>0x02</td></tr>
+  <tr><td>💎 Diamond Hands</td><td>Longest single-position hold duration</td><td>0x04</td></tr>
+  <tr><td>⭐ Perfect Round</td><td>All 5 squad members active in a round</td><td>0x08</td></tr>
+  <tr><td>🤝 Squad Builder</td><td>Create a squad that fills to 5 members</td><td>0x10</td></tr>
+  <tr><td>🔮 Oracle</td><td>Correctly predict the winning squad 3 rounds in a row</td><td>0x20</td></tr>
+</table>
+
+<p>The badge bitmask is owned by the program and set via crank — the user cannot self-award badges. The crank checks on-chain state (SquadEntry finalized + rank = 1 for Champion, etc.) before calling any badge mint CPI.</p>
+
+<!-- ── 7. Integration with Existing Infrastructure ────────────── -->
+<h2><span class="num">07</span>Integration with Existing Infrastructure</h2>
+
+<table>
+  <tr><th>Existing System</th><th>Integration Point</th></tr>
+  <tr>
+    <td><strong>Mutagen</strong></td>
+    <td>Individual Mutagen accrues unchanged. Squad membership adds a <strong>1.2× multiplier</strong> for the season duration.</td>
+  </tr>
+  <tr>
+    <td><strong>Leaderboard</strong></td>
+    <td>New "Squads" tab alongside existing individual leaderboard. Backend serves both from the same scoring engine.</td>
+  </tr>
+  <tr>
+    <td><strong>Quests</strong></td>
+    <td>New squad-specific quests: "All members profit in one round", "Complete 5 trades as a squad in 24h".</td>
+  </tr>
+  <tr>
+    <td><strong>Streaks</strong></td>
+    <td>Squad streaks: consecutive weeks in top 50%. Bonus Mutagen reward.</td>
+  </tr>
+  <tr>
+    <td><strong>Raffles</strong></td>
+    <td>Existing entries work unchanged. Top 10 squads get <strong>1.5× raffle multiplier</strong>.</td>
+  </tr>
+  <tr>
+    <td><strong>ADX Buyback</strong></td>
+    <td>10% allocation funds prize pool — zero new token emissions, self-sustaining from day one.</td>
+  </tr>
+</table>
+
+<!-- ── 8. Competitive Analysis ────────────────────────────────── -->
+<h2><span class="num">08</span>Competitive Analysis</h2>
+
+<table>
+  <tr><th>Feature</th><th>Adrena Squads</th><th>Hyperliquid</th><th>dYdX Leagues</th><th>Drift FUEL</th></tr>
+  <tr>
+    <td>Team competition</td>
+    <td><span class="check">✅ First on Solana</span></td>
+    <td><span class="cross">❌ Solo only</span></td>
+    <td><span class="cross">❌ Solo only</span></td>
+    <td><span class="cross">❌ Solo only</span></td>
+  </tr>
+  <tr>
+    <td>Recruitment incentive</td>
+    <td><span class="check">✅ 10% leader bonus</span></td>
+    <td><span class="cross">❌</span></td>
+    <td><span class="cross">❌</span></td>
+    <td><span class="cross">❌</span></td>
+  </tr>
+  <tr>
+    <td>Skill-based scoring</td>
+    <td><span class="check">✅ % return</span></td>
+    <td><span class="cross">❌ Volume-based</span></td>
+    <td><span class="check">✅ % PnL</span></td>
+    <td><span class="cross">❌ Linear volume</span></td>
+  </tr>
+  <tr>
+    <td>Retail-friendly</td>
+    <td><span class="check">✅ Equal at any size</span></td>
+    <td><span class="cross">❌ Whale-dominated</span></td>
+    <td><span class="warn">⚠️ Tiered</span></td>
+    <td><span class="cross">❌ Volume-proportional</span></td>
+  </tr>
+  <tr>
+    <td>Spectator engagement</td>
+    <td><span class="check">✅ Prediction market</span></td>
+    <td><span class="cross">❌</span></td>
+    <td><span class="cross">❌</span></td>
+    <td><span class="cross">❌</span></td>
+  </tr>
+  <tr>
+    <td>Sybil resistance</td>
+    <td><span class="check">✅ Bond + PnL + activity</span></td>
+    <td><span class="warn">⚠️ Stealth seasons</span></td>
+    <td><span class="warn">⚠️ Token gate</span></td>
+    <td><span class="check">✅ Linear scoring</span></td>
+  </tr>
+  <tr>
+    <td>On-chain prize claims</td>
+    <td><span class="check">✅ Merkle proof</span></td>
+    <td><span class="cross">❌ Centralized</span></td>
+    <td><span class="cross">❌ Centralized</span></td>
+    <td><span class="cross">❌ Centralized</span></td>
+  </tr>
+</table>
+
+<div class="callout">
+  <div class="callout-title">First Mover Advantage</div>
+  No Solana perpetuals DEX has team-based competitions. This format is proven in TradFi (prop firm team challenges), gaming (guild systems), and DeFi on other chains (Deribit Team Odyssey, GMX Squad Competitions) — but is absent from the entire Solana perps ecosystem. Adrena ships it first.
+</div>
+
+<!-- ── 9. Edge Cases & Abuse Prevention ──────────────────────── -->
+<h2><span class="num">09</span>Edge Cases &amp; Abuse Prevention</h2>
+
+<table>
+  <tr><th>Attack Vector</th><th>Mitigation</th></tr>
+  <tr>
+    <td><strong>Wash Trading</strong></td>
+    <td>PnL-based scoring makes wash trading counterproductive — round-trips produce zero PnL. Volume is not a scoring factor.</td>
+  </tr>
+  <tr>
+    <td><strong>Sybil Squads</strong> (1 person, N wallets)</td>
+    <td>50 USDC bond per squad (economic cost). Minimum 1 trade per member per round (operational cost per wallet). PnL scoring gains zero advantage from wallet splitting.</td>
+  </tr>
+  <tr>
+    <td><strong>Colluding Squads</strong></td>
+    <td>Opposing positions means one side gets near-zero or negative score. Net EV of collusion is negative after 0.16% fees per close.</td>
+  </tr>
+  <tr>
+    <td><strong>Inactive Members</strong></td>
+    <td>Zero-trade members score 0, dragging squad average. Leaders can kick after 2 inactive rounds. Slot remains empty — not refillable.</td>
+  </tr>
+  <tr>
+    <td><strong>Squad Size Imbalance</strong></td>
+    <td>Score is <em>averaged</em> over total_members. A 2-person squad with elite traders beats a 5-person squad with inconsistent performers.</td>
+  </tr>
+  <tr>
+    <td><strong>Late-Season Roster Gaming</strong></td>
+    <td>Squads lock at competition start. No mid-season changes possible on-chain.</td>
+  </tr>
+  <tr>
+    <td><strong>Double Prize Claims</strong></td>
+    <td><code>ClaimRecord</code> PDA (<code>["claim", competition, claimant]</code>) initialized on first claim. Anchor's <code>init</code> constraint makes a second claim physically impossible.</td>
+  </tr>
+  <tr>
+    <td><strong>Prediction Self-Staking</strong></td>
+    <td>On-chain constraint: <code>user_profile.current_squad != Some(squad_pubkey)</code> enforced at the program level.</td>
+  </tr>
+</table>
+
+<!-- ── 10. Technical Architecture ────────────────────────────── -->
+<h2><span class="num">10</span>Technical Architecture</h2>
+
+<div class="arch">
+<span class="layer-frontend">┌─────────────────────────────────────────────────────────────────┐
+│  FRONTEND  (Next.js 16 · Tailwind v4 · IBM Plex Mono)  :3002   │
+│  Squad Leaderboard · Squad Detail · Prediction Market · Profile │
+└─────────────────────────────┬───────────────────────────────────┘</span>
+                              <span class="dim">│ REST (7 endpoints)</span>
+<span class="layer-backend">┌─────────────────────────────▼───────────────────────────────────┐
+│  BACKEND  (Express · TypeScript · PostgreSQL)                   │
+│  Scoring Engine · Merkle Builder · Adrena API Client           │
+│  Crank Service (competition lifecycle + scoring cranker)        │
+│                                                                 │
+│  Scoring inputs:                                                │
+│  ├── datapi.adrena.trade/get-positions (open position PnL)     │
+│  ├── Solana RPC getSignaturesForAddress (closed trade history)  │
+│  └── On-chain PDAs (squad state, competition state)            │
+└─────────────────────────────┬───────────────────────────────────┘</span>
+                              <span class="dim">│ Anchor RPC</span>
+<span class="layer-chain">┌─────────────────────────────▼───────────────────────────────────┐
+│  ANCHOR PROGRAM  adrena_squads  (Rust · Solana SBF)            │
+│  Program ID: 8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc     │
+│                                                                 │
+│  17 instructions:                                               │
+│  Config: initialize_config                                      │
+│  Profiles: init_user_profile                                    │
+│  Squad: create_squad · join_squad · leave_squad · kick_member  │
+│  Competition: create · start · register_entry · finalize · end │
+│  Prizes: claim_prize (Merkle proof + ClaimRecord PDA guard)    │
+│  Predictions: create_pool · place · lock · resolve · claim     │
+└─────────────────────────────────────────────────────────────────┘</span>
+</div>
+
+<h3>PDA Seeds Reference</h3>
+<table>
+  <tr><th>Account</th><th>Seeds</th><th>Purpose</th></tr>
+  <tr><td><code>Config</code></td><td><code>["config"]</code></td><td>Global program config, bond vault ref</td></tr>
+  <tr><td><code>Squad</code></td><td><code>["squad", squad_id le64]</code></td><td>Squad membership + bond status</td></tr>
+  <tr><td><code>UserProfile</code></td><td><code>["user_profile", user]</code></td><td>Current squad, badge bitmask</td></tr>
+  <tr><td><code>Competition</code></td><td><code>["competition", id le64]</code></td><td>Lifecycle state + Merkle root</td></tr>
+  <tr><td><code>SquadEntry</code></td><td><code>["squad_entry", comp, squad]</code></td><td>Per-round scores + rank</td></tr>
+  <tr><td><code>ClaimRecord</code></td><td><code>["claim", comp, claimant]</code></td><td>Double-spend guard for prizes</td></tr>
+  <tr><td><code>PrizeAuthority</code></td><td><code>["prize_auth", comp]</code></td><td>PDA signer over prize vault</td></tr>
+  <tr><td><code>PredictionPool</code></td><td><code>["prediction", comp, round le32]</code></td><td>Pool stakes + status</td></tr>
+  <tr><td><code>PredictionEntry</code></td><td><code>["pred_entry", pool, user]</code></td><td>Per-user stake + claimed flag</td></tr>
+</table>
+
+<h3>Prize Distribution Flow</h3>
+<div class="flow">
+  <div class="flow-step">Crank fetches<br>positions/trades</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Score engine<br>calculates bps</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">finalize_round<br>per squad</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Build SHA-256<br>Merkle tree</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step active">end_competition<br>(root on-chain)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Winners claim<br>via proof</div>
+</div>
+
+<p>Prize distribution is <strong>trustless</strong>: once the Merkle root is posted on-chain, neither the program authority nor any other party can modify who receives what. Winners claim directly against the on-chain root using a SHA-256 Merkle proof. The <code>ClaimRecord</code> PDA prevents double-claims at the protocol level.</p>
+
+<hr>
+
+<div class="footnote">
+  <p><strong>Adrena Squads</strong> — Bounty Submission, March 2026 | Network: Solana Devnet | Program: <code>8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc</code></p>
+  <p>Testing: 22/22 backend unit tests passing · 19/19 Anchor integration tests passing · See <code>TESTING_REPORT.md</code> for full results, simulated competition walkthrough, and user feedback.</p>
+</div>
+
+</body>
+</html>
