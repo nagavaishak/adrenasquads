@@ -268,6 +268,8 @@ Badge state is a `u64` bitmask on `UserProfile`, with Metaplex Bubblegum compres
 
 ## Security
 
+- Mint authority keypair managed via Vercel environment secrets — not stored in the repo
+- `.env.local` is `.gitignore`d; all production secrets live in Vercel CI/CD
 - Bond vault and prize vault use PDA-signed CPIs -- no user funds held by EOA
 - Merkle proof verification uses SHA-256 (`solana_program::hash::hashv`)
 - Prediction pool locks before competition goes Active -- no retroactive staking
