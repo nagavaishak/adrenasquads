@@ -9,6 +9,7 @@ import { type Squad, type Competition, MOCK_COMPETITION, MOCK_SQUADS } from "@/l
 import { api } from "@/lib/api";
 
 type View = "list" | "grid";
+type AgentFilter = "all" | "human" | "ai";
 
 function mapApiSquads(rows: ReturnType<typeof Array.prototype.map>): Squad[] {
   return (rows as Array<Record<string, unknown>>).map((s, i) => ({
@@ -45,6 +46,7 @@ export default function SquadsPage() {
   const { connected, publicKey } = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
   const [view, setView] = useState<View>("list");
+  const [agentFilter, setAgentFilter] = useState<AgentFilter>("all");
   const [search, setSearch] = useState("");
   const [squads, setSquads] = useState<Squad[]>(MOCK_SQUADS);
   const [competition, setCompetition] = useState<Competition>(MOCK_COMPETITION);
@@ -67,9 +69,12 @@ export default function SquadsPage() {
       .catch(() => {});
   }, []);
 
-  const filtered = squads.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = squads.filter((s) => {
+    if (!s.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (agentFilter === "ai") return !!s.isAgent;
+    if (agentFilter === "human") return !s.isAgent;
+    return true;
+  });
 
   function handleCreateSquad() {
     if (!connected) { openWalletModal(true); return; }
@@ -272,16 +277,40 @@ export default function SquadsPage() {
         </div>
       </div>
 
-      {/* ── Search + view toggle ─────────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12 }}>
-        <div style={{ position: "relative", flex: 1, maxWidth: 260 }}>
-          <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: 11, pointerEvents: "none" }}>&#x2315;</span>
-          <input
-            placeholder="Search squads..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "100%", padding: "7px 10px 7px 28px", backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: 3, color: "var(--text)", fontSize: 12, fontFamily: "monospace", outline: "none" }}
-          />
+      {/* ── Search + filters + view toggle ───────────────────────────── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: 11, pointerEvents: "none" }}>&#x2315;</span>
+            <input
+              placeholder="Search squads..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: 200, padding: "7px 10px 7px 28px", backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: 3, color: "var(--text)", fontSize: 12, fontFamily: "monospace", outline: "none" }}
+            />
+          </div>
+
+          {/* Agent filter */}
+          <div style={{ display: "flex", gap: 1 }}>
+            {(["all", "human", "ai"] as const).map((f, fi) => (
+              <button
+                key={f}
+                onClick={() => setAgentFilter(f)}
+                style={{
+                  padding: "6px 10px",
+                  backgroundColor: agentFilter === f ? (f === "ai" ? "#a78bfa22" : "var(--surface-raised)") : "transparent",
+                  border: `1px solid ${agentFilter === f && f === "ai" ? "#a78bfa60" : "var(--border)"}`,
+                  color: agentFilter === f ? (f === "ai" ? "#a78bfa" : "var(--text)") : "var(--text-muted)",
+                  fontSize: 10, cursor: "pointer", fontFamily: "monospace", letterSpacing: "0.06em",
+                  borderRadius: fi === 0 ? "3px 0 0 3px" : fi === 2 ? "0 3px 3px 0" : "0",
+                  marginLeft: fi > 0 ? "-1px" : 0,
+                  transition: "all 0.1s",
+                }}
+              >
+                {f === "all" ? "ALL" : f === "human" ? "HUMAN" : "⬡ AI"}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 1 }}>

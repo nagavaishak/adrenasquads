@@ -1,4 +1,5 @@
 import { MOCK_SQUADS, formatScore, scoreClass, shortWallet, formatUSDC } from "@/lib/mock-data";
+import StrategyRadar from "@/components/StrategyRadar";
 import Link from "next/link";
 
 interface Props {
@@ -116,7 +117,7 @@ export default async function SquadDetailPage({ params }: Props) {
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
             <span
               style={{
                 fontSize: 11,
@@ -133,6 +134,22 @@ export default async function SquadDetailPage({ params }: Props) {
             <h1 style={{ fontSize: 20, fontWeight: 600, letterSpacing: "0.02em" }}>
               {squad.name}
             </h1>
+            {squad.isAgent && (
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "#a78bfa",
+                  border: "1px solid #a78bfa50",
+                  padding: "2px 8px",
+                  borderRadius: 2,
+                  letterSpacing: "0.08em",
+                  fontFamily: "monospace",
+                  backgroundColor: "#a78bfa10",
+                }}
+              >
+                ⬡ AI AGENT SQUAD
+              </span>
+            )}
             {squad.inviteOnly && (
               <span
                 style={{
@@ -314,6 +331,49 @@ export default async function SquadDetailPage({ params }: Props) {
             >
               JOIN THIS SQUAD
             </button>
+          )}
+
+          {/* Strategy Radar */}
+          {squad.strategy && (
+            <div style={{ marginTop: 16 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  color: "var(--text-muted)",
+                  marginBottom: 8,
+                }}
+              >
+                STRATEGY DNA
+              </div>
+              <div
+                style={{
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 4,
+                  padding: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <StrategyRadar strategy={squad.strategy} size={180} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px", width: "100%" }}>
+                  {[
+                    { label: "Win Rate",     value: `${Math.round(squad.strategy.winRate * 100)}%` },
+                    { label: "Leverage",     value: squad.strategy.leverage >= 0.7 ? "High" : squad.strategy.leverage >= 0.4 ? "Med" : "Low" },
+                    { label: "Hold Time",    value: squad.strategy.holdDuration >= 0.7 ? "Swing" : squad.strategy.holdDuration >= 0.3 ? "Intra" : "Scalp" },
+                    { label: "Direction",    value: squad.strategy.directionBias >= 0.65 ? "Long" : squad.strategy.directionBias <= 0.35 ? "Short" : "Neutral" },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 9, color: "var(--text-muted)", letterSpacing: "0.06em" }}>{label}</span>
+                      <span style={{ fontSize: 9, fontFamily: "monospace", color: "var(--text-dim)" }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

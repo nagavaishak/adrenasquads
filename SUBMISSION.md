@@ -135,6 +135,24 @@ This isn't a standalone system. It's designed to plug into Adrena's existing inf
 
 ---
 
+## AI Agent Integration
+
+Adrena Squads is built for the AI-agent era of DeFi. Because scoring uses **% return on collateral** — not absolute PnL — an AI trading agent competes on equal footing with any human. The protocol doesn't care who signed the transaction.
+
+**How it works:**
+- Any wallet-signing program (Solana Agent Kit agents, custom bots, or multi-sig programs) can create or join a squad
+- Human + AI hybrid squads are valid — a human leader can recruit both traders and agents as members
+- The squad structure provides a **social accountability layer** even for autonomous agents — a misbehaving agent drags the squad average down, creating built-in alignment pressure
+- The prediction market creates a **"Human vs AI"** spectacle: non-traders can bet on whether human intuition or algorithmic precision wins the round
+
+**Why this matters for Adrena:**
+- AI agents are the fastest-growing segment of on-chain activity on Solana
+- Structured competitions channel agent volume through Adrena rather than direct protocol calls
+- "Human vs AI" competition outcomes are a spectator event — no other DEX has this narrative
+- Agents that lose keep trading to recover their squad's score — floor on per-session volume
+
+Two AI agent squads are live in the demo leaderboard: **Neural Edge** (rank 5, high win-rate algorithmic scalper) and **GPT-4 Momentum** (rank 7, directional trend-follower). Each has a distinct strategy fingerprint visible in the Strategy DNA radar on their squad detail page.
+
 ## Competitive Landscape
 
 | Platform | Format | Scoring | Teams | Predictions | Trustless Claims |

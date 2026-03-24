@@ -11,6 +11,15 @@ export interface Squad {
   prevRank: number;
   prizeAmount: number;
   roundHistory: number[]; // scores per round
+  isAgent?: boolean; // true if squad includes AI trading agents
+  strategy?: {
+    leverage: number;      // 0-1: avg leverage intensity
+    directionBias: number; // 0-1: 0=short-biased, 0.5=neutral, 1=long-biased
+    holdDuration: number;  // 0-1: 0=scalper, 1=swing
+    winRate: number;       // 0-1
+    diversification: number; // 0-1: 0=single-asset, 1=multi-asset
+    riskAppetite: number;  // 0-1: 0=conservative, 1=aggressive
+  };
 }
 
 export interface Competition {
@@ -57,11 +66,12 @@ export const MOCK_SQUADS: Squad[] = [
     members: ["9xKq...4mRz", "3pLw...7nBf", "5tHj...2cDk", "8yVm...1sAp"],
     memberCount: 4,
     inviteOnly: false,
-    aggregateScore: 2840,  // +28.40%
+    aggregateScore: 2840,
     rank: 1,
     prevRank: 2,
     prizeAmount: 1500_000000,
     roundHistory: [1200, 1850, 2100, 2840],
+    strategy: { leverage: 0.82, directionBias: 0.75, holdDuration: 0.3, winRate: 0.68, diversification: 0.4, riskAppetite: 0.85 },
   },
   {
     id: 2,
@@ -71,11 +81,12 @@ export const MOCK_SQUADS: Squad[] = [
     members: ["7wPn...8kLm", "2mQr...5vXz", "6sGh...9wNb"],
     memberCount: 3,
     inviteOnly: true,
-    aggregateScore: 2210,  // +22.10%
+    aggregateScore: 2210,
     rank: 2,
     prevRank: 1,
     prizeAmount: 750_000000,
     roundHistory: [2400, 2100, 1900, 2210],
+    strategy: { leverage: 0.35, directionBias: 0.5, holdDuration: 0.7, winRate: 0.72, diversification: 0.85, riskAppetite: 0.3 },
   },
   {
     id: 3,
@@ -85,11 +96,12 @@ export const MOCK_SQUADS: Squad[] = [
     members: ["4kFt...3gCe", "1nBw...6hDq", "0jXp...4fRs", "9aYv...7eWm", "5cZk...2iNl"],
     memberCount: 5,
     inviteOnly: false,
-    aggregateScore: 1730,  // +17.30%
+    aggregateScore: 1730,
     rank: 3,
     prevRank: 4,
     prizeAmount: 250_000000,
     roundHistory: [800, 1200, 1650, 1730],
+    strategy: { leverage: 0.55, directionBias: 0.48, holdDuration: 0.15, winRate: 0.61, diversification: 0.9, riskAppetite: 0.6 },
   },
   {
     id: 4,
@@ -99,25 +111,28 @@ export const MOCK_SQUADS: Squad[] = [
     members: ["6rMs...0dBh", "8uNt...5cFj"],
     memberCount: 2,
     inviteOnly: false,
-    aggregateScore: 1290,  // +12.90%
+    aggregateScore: 1290,
     rank: 4,
     prevRank: 3,
     prizeAmount: 0,
     roundHistory: [1800, 1500, 1100, 1290],
+    strategy: { leverage: 0.25, directionBias: 0.8, holdDuration: 0.92, winRate: 0.55, diversification: 0.3, riskAppetite: 0.2 },
   },
   {
     id: 5,
     pubkey: "EuFbKKF2NMbV3kS4dR9TjL7cPeW1uXnYmZoH6pQfDtE",
-    name: "Delta Neutral",
-    leader: "2vOw...9bGn",
-    members: ["2vOw...9bGn", "7xPz...3eHk", "5qRa...1mJd", "3sCb...8nLp"],
-    memberCount: 4,
+    name: "Neural Edge",
+    leader: "agent-v2.sol",
+    members: ["agent-v2.sol", "agent-v2b.sol", "7xPz...3eHk"],
+    memberCount: 3,
     inviteOnly: true,
-    aggregateScore: 840,   // +8.40%
+    aggregateScore: 840,
     rank: 5,
     prevRank: 6,
     prizeAmount: 0,
     roundHistory: [300, 650, 920, 840],
+    isAgent: true,
+    strategy: { leverage: 0.45, directionBias: 0.52, holdDuration: 0.08, winRate: 0.78, diversification: 0.95, riskAppetite: 0.4 },
   },
   {
     id: 6,
@@ -127,25 +142,28 @@ export const MOCK_SQUADS: Squad[] = [
     members: ["1wQd...7aFm", "4yRe...2bGn", "9zSf...6cHo"],
     memberCount: 3,
     inviteOnly: false,
-    aggregateScore: 510,   // +5.10%
+    aggregateScore: 510,
     rank: 6,
     prevRank: 5,
     prizeAmount: 0,
     roundHistory: [950, 700, 400, 510],
+    strategy: { leverage: 0.7, directionBias: 0.65, holdDuration: 0.4, winRate: 0.52, diversification: 0.5, riskAppetite: 0.75 },
   },
   {
     id: 7,
     pubkey: "GwHdMKF2NMbV3kS4dR9TjL7cPeW1uXnYmZoH6pQfDtE",
-    name: "Solana Sharpshooters",
-    leader: "3xTg...5dIp",
-    members: ["3xTg...5dIp", "8yUh...0eJq"],
+    name: "GPT-4 Momentum",
+    leader: "gpt4-agent.sol",
+    members: ["gpt4-agent.sol", "gpt4-hedge.sol"],
     memberCount: 2,
     inviteOnly: false,
-    aggregateScore: -230,  // -2.30%
+    aggregateScore: -230,
     rank: 7,
     prevRank: 7,
     prizeAmount: 0,
     roundHistory: [600, 200, -100, -230],
+    isAgent: true,
+    strategy: { leverage: 0.6, directionBias: 0.7, holdDuration: 0.05, winRate: 0.45, diversification: 0.7, riskAppetite: 0.55 },
   },
   {
     id: 8,
@@ -155,11 +173,12 @@ export const MOCK_SQUADS: Squad[] = [
     members: ["5yVi...1fKr", "0zWj...6gLs", "7aTk...3hMs"],
     memberCount: 3,
     inviteOnly: false,
-    aggregateScore: -670,  // -6.70%
+    aggregateScore: -670,
     rank: 8,
     prevRank: 8,
     prizeAmount: 0,
     roundHistory: [1100, 400, -200, -670],
+    strategy: { leverage: 0.9, directionBias: 0.85, holdDuration: 0.2, winRate: 0.38, diversification: 0.2, riskAppetite: 0.95 },
   },
 ];
 

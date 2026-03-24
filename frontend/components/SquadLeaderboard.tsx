@@ -57,14 +57,21 @@ export default function SquadLeaderboard({ squads }: Props) {
                     <RankBadge rank={squad.rank} />
                   </td>
                   <td>
-                    <Link href={`/squads/${squad.pubkey}`} style={{ color: isFirst ? "var(--gold)" : "var(--text)", textDecoration: "none", fontWeight: 500, fontSize: 12, letterSpacing: "0.01em" }}>
-                      {squad.name}
-                    </Link>
-                    {squad.inviteOnly && (
-                      <span style={{ marginLeft: 6, fontSize: 9, color: "var(--text-muted)", border: "1px solid var(--border)", padding: "1px 4px", borderRadius: 2, letterSpacing: "0.06em" }}>
-                        INV
-                      </span>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Link href={`/squads/${squad.pubkey}`} style={{ color: isFirst ? "var(--gold)" : "var(--text)", textDecoration: "none", fontWeight: 500, fontSize: 12, letterSpacing: "0.01em" }}>
+                        {squad.name}
+                      </Link>
+                      {squad.isAgent && (
+                        <span title="AI Agent Squad" style={{ fontSize: 9, color: "#a78bfa", border: "1px solid #a78bfa40", padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em", fontFamily: "monospace" }}>
+                          AI
+                        </span>
+                      )}
+                      {squad.inviteOnly && (
+                        <span style={{ fontSize: 9, color: "var(--text-muted)", border: "1px solid var(--border)", padding: "1px 4px", borderRadius: 2, letterSpacing: "0.06em" }}>
+                          INV
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ textAlign: "right" }}>
                     <span className={scoreClass(squad.aggregateScore)} style={{ fontFamily: "monospace", fontWeight: 600, fontSize: 13 }}>
@@ -116,6 +123,11 @@ export default function SquadLeaderboard({ squads }: Props) {
                 <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: isFirst ? "var(--gold)" : "var(--text)", letterSpacing: "0.01em" }}>
                   {squad.name}
                 </span>
+                {squad.isAgent && (
+                  <span style={{ fontSize: 9, color: "#a78bfa", border: "1px solid #a78bfa40", padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em", fontFamily: "monospace" }}>
+                    AI
+                  </span>
+                )}
                 {squad.inviteOnly && (
                   <span style={{ fontSize: 9, color: "var(--text-muted)", border: "1px solid var(--border)", padding: "1px 4px", borderRadius: 2, letterSpacing: "0.06em" }}>
                     INV
