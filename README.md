@@ -29,7 +29,9 @@ Scoring uses **% return on collateral**, not absolute PnL. A trader risking $500
 | **Scoring engine** | Calls `datapi.adrena.trade` for live positions, computes risk-adjusted scores | Working |
 | **Merkle distribution** | SHA-256 tree + on-chain proof verification, `ClaimRecord` PDA prevents double-claims | Tested |
 | **Prediction market** | USDC staking, proportional payouts, 5% fee, self-stake prevention | On-chain |
-| **Frontend** | Next.js 16 -- leaderboard, predictions, badges, profile, wallet connect (Phantom/Solflare) | Live |
+| **Frontend** | Next.js 16 -- leaderboard, predictions, badges, profile, wallet connect (Phantom/Solflare), Strategy DNA radar | Live |
+| **AI Agent Squads** | Any wallet-signing program can join a squad -- % return scoring is agent-neutral | Live in demo |
+| **Devnet faucet** | `/api/faucet` mints 100 test USDC to any wallet for end-to-end testing | Live |
 | **Tests** | 19 Anchor integration + 22 backend unit tests (41 total, all passing) | Passing |
 
 ---
@@ -72,18 +74,22 @@ The leaderboard route at `/api/competition/leaderboard` queries live Adrena posi
 ```
 ┌─────────────────────────────────────────────────────────────┐
 |  Frontend (Next.js 16 + Tailwind v4)                        |
-|  Leaderboard | Predictions | Badges | Wallet Adapter        |
+|  Leaderboard | Predictions | Badges | Strategy DNA Radar    |
+|  Wallet Adapter | AI Agent squad filter                     |
 └───────────────────────────┬─────────────────────────────────┘
-                            | REST + Server Actions
+                            | same-origin fetch
 ┌───────────────────────────▼─────────────────────────────────┐
-|  API Layer (Next.js Route Handlers + Express backend)       |
+|  API Routes (Next.js serverless — deployed on Vercel)       |
+|  /api/competition  /api/squads  /api/predictions/[round]    |
+|  /api/competition/leaderboard  /api/profile/[wallet]        |
+|  /api/faucet  (mints devnet test USDC for judges/testers)   |
 |  Scoring engine | Merkle builder | Adrena API client        |
-|  PostgreSQL | Crank service | Abuse detection               |
+|  Abuse detection | Mutagen hooks                            |
 └───────────────────────────┬─────────────────────────────────┘
-                            | Anchor RPC
+                            | @solana/web3.js + Anchor RPC
 ┌───────────────────────────▼─────────────────────────────────┐
 |  Anchor Program (Rust)  adrena_squads                       |
-|  17 instructions | 8 PDA types | Merkle verification        |
+|  17 instructions | 9 PDA types | Merkle verification        |
 |  Squad lifecycle | Competition FSM | Prediction market       |
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -162,9 +168,10 @@ adrena-squads/
 |   └── tests/
 |       └── scoring.test.ts   22 scoring unit tests (Jest) -- all passing
 ├── frontend/                 Next.js 16 app
-|   ├── app/                  Pages: landing, squads, predict, profile, admin
-|   ├── app/api/              Serverless API routes (competition, leaderboard, predictions)
-|   └── components/           Leaderboard, SquadCard, BadgeGrid, WalletProvider, ...
+|   ├── app/                  Pages: landing, squads, squads/[id], predict, profile
+|   ├── app/api/              Serverless API routes (competition, leaderboard, predictions, faucet)
+|   ├── lib/adrena-program.ts On-chain tx builder — create_squad, init_user_profile
+|   └── components/           Leaderboard, SquadCard, BadgeGrid, StrategyRadar, WalletProvider, ...
 └── scripts/
     ├── initialize.ts         Creates Config PDA + bond vault
     ├── create-test-competition.ts
@@ -211,6 +218,36 @@ npx ts-node --transpile-only scripts/initialize.ts \
 npx ts-node --transpile-only scripts/create-test-competition.ts \
   --prize-vault <vault-owned-by-prize-auth-pda>
 ```
+
+---
+
+## AI Agent Squads
+
+Because scoring uses **% return on collateral** — not absolute PnL — an AI trading agent competes on equal footing with any human wallet. The program has no concept of "human vs bot": it scores any signing pubkey the same way.
+
+Any Solana Agent Kit agent, custom trading bot, or multi-sig program can `create_squad` or `join_squad`. The squad structure provides a social accountability layer even for autonomous agents — a misbehaving agent drags the squad average down, creating built-in alignment pressure.
+
+The demo leaderboard includes two AI-powered squads with distinct strategy profiles:
+- **Neural Edge** (rank 5) — high win-rate algorithmic scalper, 95% asset diversification
+- **GPT-4 Momentum** (rank 7) — directional trend-follower, 5ms average hold time
+
+Filter by `⬡ AI` on the squads page to see agent squads only.
+
+---
+
+## Devnet Faucet
+
+Judges and testers can get free test USDC without a separate drip service:
+
+```bash
+curl -X POST https://adrenasquads.vercel.app/api/faucet \
+  -H "Content-Type: application/json" \
+  -d '{"wallet": "<your-devnet-wallet>"}'
+# → mints 100 USDC to your wallet ATA
+# → returns { success, signature, explorerUrl }
+```
+
+Or use the **"+ GET 100 USDC"** button inside the Create Squad modal on the live site.
 
 ---
 
