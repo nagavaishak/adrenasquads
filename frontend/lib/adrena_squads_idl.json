@@ -1,0 +1,2205 @@
+{
+  "address": "8tjeonB7WWE1S33jsXRMwmU8YhwsRGeAHa6b2Bze8Fwc",
+  "metadata": {
+    "name": "adrena_squads",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "claim_prediction",
+      "docs": [
+        "Winning predictor claims their proportional share (minus 5% fee)."
+      ],
+      "discriminator": [
+        142,
+        100,
+        159,
+        123,
+        31,
+        183,
+        0,
+        113
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "prediction_entry"
+          ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "prediction_pool"
+        },
+        {
+          "name": "prediction_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction_pool"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_vault",
+          "writable": true
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "stake_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction_pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_prize",
+      "docs": [
+        "Claimant submits a Merkle proof to withdraw their prize."
+      ],
+      "discriminator": [
+        157,
+        233,
+        139,
+        121,
+        246,
+        62,
+        234,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "claimant",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "competition",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  112,
+                  101,
+                  116,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition.competition_id",
+                "account": "Competition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "claim_record",
+          "docs": [
+            "Initialized on the very first claim; its existence rejects any repeat claim."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              },
+              {
+                "kind": "account",
+                "path": "claimant"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prize_vault",
+          "docs": [
+            "Prize vault PDA"
+          ],
+          "writable": true
+        },
+        {
+          "name": "claimant_token_account",
+          "docs": [
+            "Claimant's USDC token account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "prize_authority",
+          "docs": [
+            "PDA authority over the prize vault"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  105,
+                  122,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_competition",
+      "docs": [
+        "Authority creates a new competition round."
+      ],
+      "discriminator": [
+        110,
+        212,
+        234,
+        212,
+        118,
+        128,
+        158,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  112,
+                  101,
+                  116,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.next_competition_id",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prize_mint"
+        },
+        {
+          "name": "prize_vault",
+          "docs": [
+            "Token account that will hold prize funds for this competition"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CompetitionParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_prediction_pool",
+      "docs": [
+        "Authority creates a prediction pool for the round."
+      ],
+      "discriminator": [
+        51,
+        35,
+        0,
+        249,
+        153,
+        134,
+        217,
+        47
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition"
+        },
+        {
+          "name": "prediction_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  105,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              },
+              {
+                "kind": "account",
+                "path": "competition.round_number",
+                "account": "Competition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_vault",
+          "docs": [
+            "Token account that will hold prediction stakes"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_squad",
+      "docs": [
+        "Create a squad and deposit the 50 USDC bond."
+      ],
+      "discriminator": [
+        5,
+        221,
+        149,
+        143,
+        156,
+        81,
+        164,
+        46
+      ],
+      "accounts": [
+        {
+          "name": "leader",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "squad",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  113,
+                  117,
+                  97,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.next_squad_id",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "leader"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leader_token_account",
+          "docs": [
+            "Leader's USDC token account (bond source)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "bond_vault",
+          "docs": [
+            "Program bond vault"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "invite_only",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "end_competition",
+      "docs": [
+        "Authority sets the Merkle root and transitions to Finalized."
+      ],
+      "discriminator": [
+        53,
+        190,
+        110,
+        195,
+        68,
+        190,
+        52,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "merkle_root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "finalize_round",
+      "docs": [
+        "Authority submits finalized scores for a single squad (call once per squad)."
+      ],
+      "discriminator": [
+        239,
+        160,
+        254,
+        11,
+        254,
+        144,
+        53,
+        148
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition",
+          "writable": true
+        },
+        {
+          "name": "squad_entry",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "score_data",
+          "type": {
+            "defined": {
+              "name": "SquadScoreData"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "init_user_profile",
+      "docs": [
+        "Creates a UserProfile PDA for the signer. Must be called before any squad action."
+      ],
+      "discriminator": [
+        148,
+        35,
+        126,
+        247,
+        28,
+        169,
+        135,
+        175
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_config",
+      "docs": [
+        "One-time program initialization. Creates the global Config PDA."
+      ],
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bond_vault",
+          "docs": [
+            "Token account that will hold squad bonds"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "join_squad",
+      "docs": [
+        "Join an open squad (competition must be in Registration phase)."
+      ],
+      "discriminator": [
+        246,
+        32,
+        61,
+        115,
+        58,
+        136,
+        27,
+        49
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "squad",
+          "writable": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition",
+          "docs": [
+            "The active competition — must still be in Registration"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "kick_member",
+      "docs": [
+        "Leader removes an inactive member."
+      ],
+      "discriminator": [
+        78,
+        65,
+        215,
+        244,
+        103,
+        202,
+        228,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "leader",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "squad",
+          "writable": true
+        },
+        {
+          "name": "member_profile",
+          "docs": [
+            "The kicked member's profile — must pass their key as member arg"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "member"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "member",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "leave_squad",
+      "docs": [
+        "Leave a squad (only during Registration phase; leaders cannot leave)."
+      ],
+      "discriminator": [
+        167,
+        247,
+        102,
+        137,
+        238,
+        146,
+        1,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "squad",
+          "writable": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition",
+          "docs": [
+            "Can only leave during Registration phase"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "lock_predictions",
+      "docs": [
+        "Authority locks the prediction pool when competition starts."
+      ],
+      "discriminator": [
+        118,
+        143,
+        134,
+        164,
+        57,
+        79,
+        56,
+        250
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition"
+        },
+        {
+          "name": "prediction_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  105,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              },
+              {
+                "kind": "account",
+                "path": "competition.round_number",
+                "account": "Competition"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_prediction",
+      "docs": [
+        "User stakes USDC on a squad to win the round."
+      ],
+      "discriminator": [
+        79,
+        46,
+        195,
+        197,
+        50,
+        91,
+        88,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "competition"
+        },
+        {
+          "name": "prediction_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  105,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              },
+              {
+                "kind": "account",
+                "path": "competition.round_number",
+                "account": "Competition"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_profile",
+          "docs": [
+            "Ensure user is not predicting on their own squad"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prediction_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction_pool"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "stake_vault",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "squad_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "register_squad_entry",
+      "docs": [
+        "Leader registers their squad for a competition."
+      ],
+      "discriminator": [
+        221,
+        167,
+        159,
+        21,
+        26,
+        116,
+        106,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "leader",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "competition",
+          "writable": true
+        },
+        {
+          "name": "squad"
+        },
+        {
+          "name": "user_profile",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "leader"
+              }
+            ]
+          }
+        },
+        {
+          "name": "squad_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  113,
+                  117,
+                  97,
+                  100,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              },
+              {
+                "kind": "account",
+                "path": "squad"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resolve_prediction",
+      "docs": [
+        "Authority resolves the prediction pool with the winning squad."
+      ],
+      "discriminator": [
+        199,
+        159,
+        54,
+        235,
+        121,
+        68,
+        53,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition"
+        },
+        {
+          "name": "prediction_pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  105,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "competition"
+              },
+              {
+                "kind": "account",
+                "path": "competition.round_number",
+                "account": "Competition"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "winning_squad",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "start_competition",
+      "docs": [
+        "Transitions Registration → Active when Clock >= start_time."
+      ],
+      "discriminator": [
+        213,
+        149,
+        189,
+        30,
+        12,
+        88,
+        146,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "competition",
+          "writable": true
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ClaimRecord",
+      "discriminator": [
+        57,
+        229,
+        0,
+        9,
+        65,
+        62,
+        96,
+        7
+      ]
+    },
+    {
+      "name": "Competition",
+      "discriminator": [
+        193,
+        49,
+        76,
+        118,
+        106,
+        22,
+        221,
+        106
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "PredictionEntry",
+      "discriminator": [
+        97,
+        120,
+        225,
+        203,
+        151,
+        87,
+        127,
+        189
+      ]
+    },
+    {
+      "name": "Squad",
+      "discriminator": [
+        224,
+        107,
+        111,
+        49,
+        238,
+        116,
+        28,
+        160
+      ]
+    },
+    {
+      "name": "SquadEntry",
+      "discriminator": [
+        254,
+        145,
+        181,
+        61,
+        248,
+        229,
+        174,
+        137
+      ]
+    },
+    {
+      "name": "UserProfile",
+      "discriminator": [
+        32,
+        37,
+        119,
+        205,
+        179,
+        180,
+        13,
+        194
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "SquadCreated",
+      "discriminator": [
+        168,
+        240,
+        119,
+        130,
+        150,
+        206,
+        219,
+        51
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AlreadyInSquad",
+      "msg": "Wallet is already a member of a squad"
+    },
+    {
+      "code": 6001,
+      "name": "SquadFull",
+      "msg": "Squad has reached maximum capacity (5 members)"
+    },
+    {
+      "code": 6002,
+      "name": "NotSquadLeader",
+      "msg": "Only the squad leader can perform this action"
+    },
+    {
+      "code": 6003,
+      "name": "CompetitionNotActive",
+      "msg": "Competition is not in Active status"
+    },
+    {
+      "code": 6004,
+      "name": "CompetitionNotRegistration",
+      "msg": "Competition is not in Registration status"
+    },
+    {
+      "code": 6005,
+      "name": "CompetitionNotCalculating",
+      "msg": "Competition is not in Calculating status"
+    },
+    {
+      "code": 6006,
+      "name": "AlreadyFinalized",
+      "msg": "Round has already been finalized"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidMerkleProof",
+      "msg": "Invalid Merkle proof"
+    },
+    {
+      "code": 6008,
+      "name": "PredictionPoolLocked",
+      "msg": "Prediction pool is locked — no more bets"
+    },
+    {
+      "code": 6009,
+      "name": "CannotPredictOwnSquad",
+      "msg": "Squad members cannot predict on their own squad"
+    },
+    {
+      "code": 6010,
+      "name": "InsufficientBond",
+      "msg": "Insufficient bond deposited"
+    },
+    {
+      "code": 6011,
+      "name": "MemberNotFound",
+      "msg": "Member not found in squad"
+    },
+    {
+      "code": 6012,
+      "name": "MaxPredictionExceeded",
+      "msg": "Prediction stake exceeds maximum (100 USDC)"
+    },
+    {
+      "code": 6013,
+      "name": "PredictionNotResolved",
+      "msg": "Prediction pool has not been resolved"
+    },
+    {
+      "code": 6014,
+      "name": "AlreadyClaimed",
+      "msg": "Prize has already been claimed"
+    },
+    {
+      "code": 6015,
+      "name": "CompetitionNotStarted",
+      "msg": "Competition has not started yet"
+    },
+    {
+      "code": 6016,
+      "name": "NameTooLong",
+      "msg": "Squad name exceeds 32 characters"
+    },
+    {
+      "code": 6017,
+      "name": "ScoreMemberMismatch",
+      "msg": "Score data member count mismatch"
+    },
+    {
+      "code": 6018,
+      "name": "SquadEntryNotFound",
+      "msg": "Squad entry not found for this competition"
+    },
+    {
+      "code": 6019,
+      "name": "WrongSquadPicked",
+      "msg": "Prediction picked squad does not match entry"
+    },
+    {
+      "code": 6020,
+      "name": "PoolNotResolved",
+      "msg": "Prediction pool is not resolved — cannot claim"
+    },
+    {
+      "code": 6021,
+      "name": "NotAWinner",
+      "msg": "You did not win this prediction"
+    },
+    {
+      "code": 6022,
+      "name": "Unauthorized",
+      "msg": "Unauthorized — only program authority"
+    },
+    {
+      "code": 6023,
+      "name": "CompetitionFinalized",
+      "msg": "Competition is already finalized"
+    }
+  ],
+  "types": [
+    {
+      "name": "ClaimRecord",
+      "docs": [
+        "Proof that a claimant has already received their prize for a competition.",
+        "Initialized on first claim; its mere existence rejects any repeat claim.",
+        "Seeds: [b\"claim\", competition.key(), claimant.key()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "competition",
+            "type": "pubkey"
+          },
+          {
+            "name": "claimant",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Competition",
+      "docs": [
+        "A single weekly round within a season.",
+        "Seeds: [b\"competition\", competition_id.to_le_bytes()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "competition_id",
+            "type": "u64"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Program authority (crank wallet)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "season_id",
+            "type": "u64"
+          },
+          {
+            "name": "round_number",
+            "type": "u32"
+          },
+          {
+            "name": "start_time",
+            "docs": [
+              "Unix timestamp when competition goes Active"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "end_time",
+            "docs": [
+              "Unix timestamp when competition ends (scores submitted)"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "prize_mint",
+            "docs": [
+              "SPL mint used for prizes (USDC)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "prize_vault",
+            "docs": [
+              "Token account holding prize funds"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_prize_amount",
+            "docs": [
+              "Total USDC allocated as prizes (in token units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_squads",
+            "type": "u32"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "CompetitionStatus"
+              }
+            }
+          },
+          {
+            "name": "merkle_root",
+            "docs": [
+              "Merkle root submitted during finalize — used for prize claims"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CompetitionParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "season_id",
+            "type": "u64"
+          },
+          {
+            "name": "round_number",
+            "type": "u32"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "end_time",
+            "type": "i64"
+          },
+          {
+            "name": "total_prize_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CompetitionStatus",
+      "docs": [
+        "Status of a competition round"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Registration"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Calculating"
+          },
+          {
+            "name": "Finalized"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "docs": [
+        "Program-level configuration PDA. Created once by deployer.",
+        "Seeds: [b\"config\"]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Authority that can create/finalize competitions"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "next_squad_id",
+            "docs": [
+              "Auto-incrementing ID for the next squad"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "next_competition_id",
+            "docs": [
+              "Auto-incrementing ID for the next competition"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bond_amount",
+            "docs": [
+              "Bond amount required to create a squad (50 USDC = 50_000_000)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "prediction_fee_bps",
+            "docs": [
+              "Fee taken from winning predictions in basis points (500 = 5%)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "bond_vault",
+            "docs": [
+              "Vault that holds all squad bonds"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PredictionEntry",
+      "docs": [
+        "A single user's prediction on a squad winning a round.",
+        "Seeds: [b\"pred_entry\", pool.key(), user.key()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "squad_picked",
+            "docs": [
+              "The squad the user predicted would win"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_staked",
+            "docs": [
+              "Amount staked in USDC token units"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "claimed",
+            "docs": [
+              "Whether the user has already claimed their winnings"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Squad",
+      "docs": [
+        "A trading squad of 2-5 members.",
+        "Seeds: [b\"squad\", squad_id.to_le_bytes()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "squad_id",
+            "docs": [
+              "Unique sequential ID"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "leader",
+            "docs": [
+              "Squad leader — created the squad and paid the bond"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "members",
+            "docs": [
+              "Members including the leader (max 5)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "name",
+            "docs": [
+              "Display name, max 32 characters"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "invite_only",
+            "docs": [
+              "Whether joining requires an invite (enforced off-chain via invite link)"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bond_deposited",
+            "docs": [
+              "Whether the 50 USDC bond has been deposited"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Unix timestamp of squad creation"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SquadCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "squad_id",
+            "type": "u64"
+          },
+          {
+            "name": "leader",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SquadEntry",
+      "docs": [
+        "Per-squad record for a single competition round.",
+        "Seeds: [b\"squad_entry\", competition.key(), squad.key()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "competition",
+            "type": "pubkey"
+          },
+          {
+            "name": "squad",
+            "type": "pubkey"
+          },
+          {
+            "name": "aggregate_score",
+            "docs": [
+              "Aggregate squad score in basis points (e.g., 1500 = 15.00% return)"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "member_scores",
+            "docs": [
+              "Individual member scores in same order as squad.members"
+            ],
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
+            "name": "member_trade_counts",
+            "docs": [
+              "Number of trades executed by each member during the round"
+            ],
+            "type": {
+              "vec": "u32"
+            }
+          },
+          {
+            "name": "rank",
+            "docs": [
+              "Final rank within the competition (1-based)"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "prize_amount",
+            "docs": [
+              "Prize amount allocated (in USDC token units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "finalized",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SquadScoreData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "squad",
+            "type": "pubkey"
+          },
+          {
+            "name": "aggregate_score",
+            "type": "i64"
+          },
+          {
+            "name": "member_scores",
+            "type": {
+              "vec": "i64"
+            }
+          },
+          {
+            "name": "member_trade_counts",
+            "type": {
+              "vec": "u32"
+            }
+          },
+          {
+            "name": "rank",
+            "type": "u32"
+          },
+          {
+            "name": "prize_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserProfile",
+      "docs": [
+        "Cross-competition user state. One per wallet.",
+        "Seeds: [b\"user_profile\", user.key()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "current_squad",
+            "docs": [
+              "The squad this user currently belongs to (None if solo)"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "competitions_entered",
+            "type": "u32"
+          },
+          {
+            "name": "squad_wins",
+            "type": "u32"
+          },
+          {
+            "name": "total_squad_pnl_bps",
+            "docs": [
+              "Cumulative squad PnL across all competitions in basis points"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "badges",
+            "docs": [
+              "Bitmask of earned badge types"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

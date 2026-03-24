@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import CompetitionTimer from "@/components/CompetitionTimer";
 import SquadLeaderboard from "@/components/SquadLeaderboard";
 import SquadCard from "@/components/SquadCard";
 import { type Squad, type Competition, MOCK_COMPETITION, MOCK_SQUADS } from "@/lib/mock-data";
 import { api } from "@/lib/api";
+import { buildCreateSquadTxs } from "@/lib/adrena-program";
 
 type View = "list" | "grid";
 type AgentFilter = "all" | "human" | "ai";
@@ -44,17 +45,21 @@ function mapApiCompetition(c: Record<string, unknown>): Competition {
 }
 
 export default function SquadsPage() {
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, wallet, signAllTransactions } = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
   const [view, setView] = useState<View>("list");
   const [agentFilter, setAgentFilter] = useState<AgentFilter>("all");
   const [search, setSearch] = useState("");
   const [squads, setSquads] = useState<Squad[]>(MOCK_SQUADS);
   const [competition, setCompetition] = useState<Competition>(MOCK_COMPETITION);
+  const { connection } = useConnection();
   const [showCreate, setShowCreate] = useState(false);
   const [squadName, setSquadName] = useState("");
   const [creating, setCreating] = useState(false);
-  const [created, setCreated] = useState(false);
+  const [createStep, setCreateStep] = useState<"form" | "faucet" | "tx" | "done">("form");
+  const [faucetLoading, setFaucetLoading] = useState(false);
+  const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
+  const [txSig, setTxSig] = useState("");
 
   useEffect(() => {
     api.competition.leaderboard()
@@ -79,7 +84,7 @@ export default function SquadsPage() {
 
   function handleCreateSquad() {
     if (!connected) { openWalletModal(true); return; }
-    setShowCreate(true);
+    openCreateModal();
   }
 
   function handleJoinSquad() {
@@ -89,13 +94,74 @@ export default function SquadsPage() {
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  async function fetchUsdcBalance() {
+    if (!publicKey) return;
+    try {
+      const { USDC_MINT } = await import("@/lib/adrena-program");
+      const { getAssociatedTokenAddress } = await import("@solana/spl-token");
+      const ata = await getAssociatedTokenAddress(USDC_MINT, publicKey);
+      const info = await connection.getTokenAccountBalance(ata);
+      setUsdcBalance(Number(info.value.uiAmount ?? 0));
+    } catch { setUsdcBalance(0); }
+  }
+
+  async function handleFaucet() {
+    if (!publicKey) return;
+    setFaucetLoading(true);
+    try {
+      const res = await fetch("/api/faucet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: publicKey.toBase58() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUsdcBalance((prev) => (prev ?? 0) + 100);
+        setCreateStep("tx");
+      } else {
+        alert("Faucet error: " + data.error);
+      }
+    } catch { alert("Faucet request failed"); }
+    setFaucetLoading(false);
+  }
+
   async function submitCreateSquad() {
-    if (!squadName.trim()) return;
+    if (!squadName.trim() || !publicKey || !signAllTransactions) return;
     setCreating(true);
-    // Simulate tx delay -- in production this calls create_squad instruction
-    await new Promise((r) => setTimeout(r, 1800));
+    try {
+      const { txs } = await buildCreateSquadTxs(
+        connection, publicKey, squadName.trim(), false
+      );
+
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      for (const tx of txs) {
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = publicKey;
+      }
+
+      const signed = await signAllTransactions(txs);
+      let lastSig = "";
+      for (const tx of signed) {
+        lastSig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+        await connection.confirmTransaction({ signature: lastSig, blockhash, lastValidBlockHeight }, "confirmed");
+      }
+
+      setTxSig(lastSig);
+      setCreateStep("done");
+    } catch (e: unknown) {
+      const err = e as Error;
+      alert("Transaction failed: " + err.message);
+    }
     setCreating(false);
-    setCreated(true);
+  }
+
+  function openCreateModal() {
+    setShowCreate(true);
+    setCreateStep("form");
+    setSquadName("");
+    setUsdcBalance(null);
+    setTxSig("");
+    fetchUsdcBalance();
   }
 
   return (
@@ -151,36 +217,73 @@ export default function SquadsPage() {
       {showCreate && (
         <div
           style={{
-            position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)",
+            position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)",
             display: "flex", alignItems: "center", justifyContent: "center",
             zIndex: 1000, padding: 20,
           }}
-          onClick={() => { if (!creating) { setShowCreate(false); setCreated(false); setSquadName(""); } }}
+          onClick={() => { if (!creating && !faucetLoading) { setShowCreate(false); } }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 6, padding: 24, maxWidth: 420, width: "100%",
+              borderRadius: 6, padding: 28, maxWidth: 440, width: "100%",
             }}
           >
-            {created ? (
-              <div style={{ textAlign: "center", padding: "12px 0" }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
-                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6, color: "var(--success)" }}>
-                  Squad Created
+            {/* Step indicator */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+              {["Get USDC", "Name Squad", "Submit Tx"].map((label, i) => {
+                const stepMap = ["faucet", "tx", "done"];
+                const stepIdx = ["form", "faucet", "tx", "done"].indexOf(createStep);
+                const active  = i < stepIdx || (i === 0 && createStep === "form");
+                const current = (i === 0 && (createStep === "form" || createStep === "faucet")) ||
+                                (i === 1 && createStep === "tx") ||
+                                (i === 2 && createStep === "done");
+                return (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+                    <div style={{
+                      width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                      backgroundColor: active || current ? "var(--accent)" : "var(--border)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 9, color: "white", fontFamily: "monospace",
+                    }}>
+                      {i + 1}
+                    </div>
+                    <span style={{ fontSize: 9, color: current ? "var(--accent)" : "var(--text-muted)", letterSpacing: "0.06em" }}>
+                      {label}
+                    </span>
+                    {i < 2 && <div style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── DONE ─────────────────────────── */}
+            {createStep === "done" && (
+              <div style={{ textAlign: "center", padding: "8px 0" }}>
+                <div style={{ fontSize: 28, marginBottom: 12, color: "var(--success)" }}>✓</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: "var(--success)" }}>
+                  Squad Created On-Chain
                 </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 16 }}>
-                  &ldquo;{squadName}&rdquo; has been registered on devnet.
-                  50 USDC bond deposited to the vault.
+                <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.7, marginBottom: 16 }}>
+                  &ldquo;{squadName}&rdquo; is live on Solana devnet.<br />
+                  50 USDC bond deposited to vault.
                 </div>
-                <div style={{ fontSize: 9, fontFamily: "monospace", color: "var(--text-muted)", marginBottom: 16 }}>
-                  Program: 8tjeonB7WWE1S33...8Fwc
-                </div>
-                <button
-                  onClick={() => { setShowCreate(false); setCreated(false); setSquadName(""); }}
+                <a
+                  href={`https://explorer.solana.com/tx/${txSig}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
-                    padding: "8px 20px", backgroundColor: "var(--accent)", border: "none",
+                    display: "block", fontSize: 10, fontFamily: "monospace",
+                    color: "var(--accent)", marginBottom: 16, wordBreak: "break-all",
+                  }}
+                >
+                  View tx ↗ {txSig.slice(0, 20)}...
+                </a>
+                <button
+                  onClick={() => setShowCreate(false)}
+                  style={{
+                    padding: "8px 24px", backgroundColor: "var(--accent)", border: "none",
                     borderRadius: 3, color: "white", fontSize: 11, cursor: "pointer",
                     fontFamily: "monospace", letterSpacing: "0.06em",
                   }}
@@ -188,17 +291,51 @@ export default function SquadsPage() {
                   DONE
                 </button>
               </div>
-            ) : (
+            )}
+
+            {/* ── FORM / FAUCET / TX ─────────────── */}
+            {createStep !== "done" && (
               <>
-                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
-                  Create a Squad
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 16, lineHeight: 1.6 }}>
-                  Requires a 50 USDC bond deposit. Your wallet:
-                  <span style={{ fontFamily: "monospace", color: "var(--accent)", marginLeft: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Create a Squad</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 20, lineHeight: 1.6 }}>
+                  Wallet:{" "}
+                  <span style={{ fontFamily: "monospace", color: "var(--accent)" }}>
                     {publicKey?.toBase58().slice(0, 8)}...
                   </span>
+                  {"  ·  "}
+                  <span style={{ color: usdcBalance !== null && usdcBalance >= 50 ? "var(--success)" : "var(--danger)" }}>
+                    {usdcBalance !== null ? `${usdcBalance} USDC` : "checking balance..."}
+                  </span>
                 </div>
+
+                {/* Faucet row */}
+                <div style={{
+                  backgroundColor: "var(--bg)", border: "1px solid var(--border)",
+                  borderRadius: 4, padding: "12px 14px", marginBottom: 16,
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 3 }}>Test USDC Faucet</div>
+                    <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
+                      Get 100 free USDC for devnet testing
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleFaucet}
+                    disabled={faucetLoading}
+                    style={{
+                      padding: "7px 14px", flexShrink: 0,
+                      backgroundColor: faucetLoading ? "var(--border)" : "transparent",
+                      border: "1px solid var(--accent)", borderRadius: 3,
+                      color: "var(--accent)", fontSize: 10, cursor: faucetLoading ? "wait" : "pointer",
+                      fontFamily: "monospace", letterSpacing: "0.06em", fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {faucetLoading ? "MINTING..." : "+ GET 100 USDC"}
+                  </button>
+                </div>
+
                 <input
                   placeholder="Squad name (e.g. Alpha Wolves)"
                   value={squadName}
@@ -206,16 +343,16 @@ export default function SquadsPage() {
                   style={{
                     width: "100%", padding: "10px 12px", backgroundColor: "var(--bg)",
                     border: "1px solid var(--border)", borderRadius: 3, color: "var(--text)",
-                    fontSize: 12, fontFamily: "monospace", outline: "none", marginBottom: 12,
+                    fontSize: 12, fontFamily: "monospace", outline: "none", marginBottom: 16,
                     boxSizing: "border-box",
                   }}
-                  autoFocus
                 />
+
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                   <button
-                    onClick={() => { setShowCreate(false); setSquadName(""); }}
+                    onClick={() => setShowCreate(false)}
                     style={{
-                      padding: "8px 16px", backgroundColor: "transparent",
+                      padding: "9px 16px", backgroundColor: "transparent",
                       border: "1px solid var(--border)", borderRadius: 3,
                       color: "var(--text-muted)", fontSize: 11, cursor: "pointer",
                       fontFamily: "monospace",
@@ -225,21 +362,25 @@ export default function SquadsPage() {
                   </button>
                   <button
                     onClick={submitCreateSquad}
-                    disabled={creating || !squadName.trim()}
+                    disabled={creating || !squadName.trim() || (usdcBalance !== null && usdcBalance < 50)}
                     style={{
-                      padding: "8px 16px", backgroundColor: creating ? "var(--border)" : "var(--accent)",
+                      padding: "9px 16px",
+                      backgroundColor: creating ? "var(--border)" : "var(--accent)",
                       border: "none", borderRadius: 3, color: "white",
                       fontSize: 11, cursor: creating ? "wait" : "pointer",
                       fontFamily: "monospace", letterSpacing: "0.06em", fontWeight: 600,
                       opacity: !squadName.trim() ? 0.5 : 1,
                     }}
                   >
-                    {creating ? "SIGNING TX..." : "CREATE + DEPOSIT 50 USDC"}
+                    {creating ? "AWAITING SIGNATURE..." : "CREATE SQUAD ON DEVNET →"}
                   </button>
                 </div>
+
                 <div style={{ fontSize: 9, color: "var(--text-muted)", marginTop: 12, lineHeight: 1.6 }}>
-                  This calls <code style={{ color: "var(--accent)" }}>create_squad</code> on the adrena_squads program.
-                  Bond is refundable if squad is disbanded before competition starts.
+                  Calls{" "}
+                  <code style={{ color: "var(--accent)" }}>create_squad</code> on{" "}
+                  <code style={{ color: "var(--text-dim)" }}>8tjeonB7...8Fwc</code>.
+                  Bond refundable if squad disbands before competition start.
                 </div>
               </>
             )}
