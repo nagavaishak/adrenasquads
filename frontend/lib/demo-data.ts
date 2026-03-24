@@ -19,9 +19,9 @@ export const DEMO_SQUADS = [
   { squad_id: 2, squad_pubkey: "BB2sqd2xxxx", leader_pubkey: "WalB1xxx", name: "Basis Basis Basis",     invite_only: true,  bond_deposited: true, member_count: 3, aggregate_score: 2210, rank: 2 },
   { squad_id: 3, squad_pubkey: "VA3sqd3xxxx", leader_pubkey: "WalC1xxx", name: "Vol Arb Gang",          invite_only: false, bond_deposited: true, member_count: 5, aggregate_score: 1730, rank: 3 },
   { squad_id: 4, squad_pubkey: "LG4sqd4xxxx", leader_pubkey: "WalD1xxx", name: "The Long Game",         invite_only: false, bond_deposited: true, member_count: 2, aggregate_score: 1290, rank: 4 },
-  { squad_id: 5, squad_pubkey: "DN5sqd5xxxx", leader_pubkey: "WalE1xxx", name: "Delta Neutral",          invite_only: false, bond_deposited: true, member_count: 4, aggregate_score:  840, rank: 5 },
-  { squad_id: 6, squad_pubkey: "PP6sqd6xxxx", leader_pubkey: "WalF1xxx", name: "Perp Punishers",         invite_only: false, bond_deposited: true, member_count: 3, aggregate_score:  510, rank: 6 },
-  { squad_id: 7, squad_pubkey: "SS7sqd7xxxx", leader_pubkey: "WalG1xxx", name: "Solana Sharpshooters",   invite_only: false, bond_deposited: true, member_count: 2, aggregate_score: -230, rank: 7 },
+  { squad_id: 5, squad_pubkey: "EuFbKKF2NMbV3kS4dR9TjL7cPeW1uXnYmZoH6pQfDtE", leader_pubkey: "agent-v2.sol",    name: "Neural Edge",            invite_only: true,  bond_deposited: true, member_count: 3, aggregate_score:  840, rank: 5, is_agent: true },
+  { squad_id: 6, squad_pubkey: "PP6sqd6xxxx", leader_pubkey: "WalF1xxx", name: "Perp Punishers",         invite_only: false, bond_deposited: true, member_count: 3, aggregate_score:  510, rank: 6, is_agent: false },
+  { squad_id: 7, squad_pubkey: "GwHdMKF2NMbV3kS4dR9TjL7cPeW1uXnYmZoH6pQfDtE", leader_pubkey: "gpt4-agent.sol",  name: "GPT-4 Momentum",         invite_only: false, bond_deposited: true, member_count: 2, aggregate_score: -230, rank: 7, is_agent: true },
   { squad_id: 8, squad_pubkey: "AE8sqd8xxxx", leader_pubkey: "WalH1xxx", name: "Alpha Extractors",      invite_only: false, bond_deposited: true, member_count: 3, aggregate_score: -670, rank: 8 },
 ];
 
@@ -33,6 +33,7 @@ export const DEMO_LEADERBOARD = DEMO_SQUADS.map((s, i) => ({
   aggregate_score: s.aggregate_score,
   prize_amount: [1500, 750, 250, 0, 0, 0, 0, 0][i] ?? 0,
   member_count: s.member_count,
+  is_agent: (s as Record<string, unknown>).is_agent ?? false,
   member_scores: Array.from({ length: s.member_count }, (_, j) => ({
     wallet: `Wal${String.fromCharCode(65 + i)}${j + 1}xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
     score: Math.round(s.aggregate_score * (0.7 + j * 0.15)),

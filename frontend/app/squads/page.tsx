@@ -15,7 +15,7 @@ function mapApiSquads(rows: ReturnType<typeof Array.prototype.map>): Squad[] {
   return (rows as Array<Record<string, unknown>>).map((s, i) => ({
     id: (s.squad_id as number) ?? i,
     pubkey: (s.squad_pubkey as string) ?? "",
-    name: (s.name as string) ?? "",
+    name: (s.squad_name as string) ?? (s.name as string) ?? "",
     leader: (s.leader_pubkey as string) ?? "",
     members: [],
     memberCount: (s.member_count as number) ?? 0,
@@ -25,6 +25,7 @@ function mapApiSquads(rows: ReturnType<typeof Array.prototype.map>): Squad[] {
     prevRank: ((s.rank as number) ?? i + 1) + (Math.random() > 0.5 ? 1 : -1),
     prizeAmount: (s.prize_amount as number) ?? 0,
     roundHistory: [],
+    isAgent: (s.is_agent as boolean) ?? false,
   }));
 }
 
